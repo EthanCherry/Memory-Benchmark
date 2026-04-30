@@ -1,29 +1,36 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "LarkMemory Benchmark Case Schema",
-  "description": "Standard schema for LarkMemory enterprise memory benchmark test cases",
-  "version": "1.0.0",
+  "title": "LarkMemory Benchmark Case Schema v2",
+  "description": "Standard schema for LarkMemory enterprise memory benchmark test cases. Organized by 4 scenario directions (A/B/C/D), each containing applicable test types (anti_interference, contradiction_update, efficiency).",
+  "version": "2.0.0",
   "type": "object",
-  "required": ["case_id", "category", "scenario", "difficulty", "input_events", "query", "expected", "metrics"],
+  "required": ["case_id", "category", "test_type", "scenario", "difficulty", "input_events", "query", "expected", "metrics"],
   "properties": {
     "case_id": {
       "type": "string",
-      "description": "Unique identifier for the test case, format: {category_abbr}_{NNN}",
-      "pattern": "^[a-z_]+_[0-9]{3}$",
-      "examples": ["decision_001", "anti_002", "command_003"]
+      "description": "Unique identifier, format: {direction_abbr}_{test_type_abbr}_{NNN}",
+      "pattern": "^[a-z]+_[a-z]+_[0-9]{3}$",
+      "examples": ["cmd_eff_001", "dec_anti_002", "pref_contra_003", "kh_anti_004"]
     },
     "category": {
       "type": "string",
-      "description": "Dataset category this case belongs to",
+      "description": "Scenario direction this case belongs to (maps to competition tracks A/B/C/D)",
+      "enum": [
+        "command_memory",
+        "decision_memory",
+        "preference_memory",
+        "knowledge_health"
+      ]
+    },
+    "test_type": {
+      "type": "string",
+      "description": "Test type — which competition-required or extended capability is being evaluated. Not all test types apply to every direction.",
       "enum": [
         "anti_interference",
         "contradiction_update",
         "efficiency",
-        "command_memory",
-        "decision_memory",
-        "preference_memory",
-        "knowledge_health",
-        "long_term_memory"
+        "retrieval_recall",
+        "long_term_retention"
       ]
     },
     "scenario": {
@@ -32,12 +39,17 @@
     },
     "difficulty": {
       "type": "string",
-      "description": "Difficulty level of this test case",
+      "description": "Difficulty level. easy=same-day/same-project, medium=cross-week/light-noise, hard=cross-month/heavy-noise/complex-conflict",
       "enum": ["easy", "medium", "hard"]
+    },
+    "time_span_days": {
+      "type": "integer",
+      "description": "Number of days between earliest and latest event in input_events. Used to quantify long-term retention difficulty.",
+      "minimum": 0
     },
     "input_events": {
       "type": "array",
-      "description": "Sequence of events to be ingested into the memory system",
+      "description": "Sequence of events to be ingested into the memory system before querying",
       "minItems": 1,
       "items": {
         "type": "object",
@@ -94,7 +106,7 @@
         "memory_type": {
           "type": "string",
           "description": "Expected memory type tag",
-          "enum": ["decision", "preference", "command", "knowledge", "event", "unknown"]
+          "enum": ["decision", "preference", "command", "knowledge", "event"]
         },
         "answer_keywords": {
           "type": "array",
@@ -103,12 +115,12 @@
         },
         "should_not_contain": {
           "type": "array",
-          "description": "Strings that must NOT appear in the system's response",
+          "description": "Strings that must NOT appear in the system's response (e.g., outdated values)",
           "items": { "type": "string" }
         },
         "latest_value": {
           "type": "string",
-          "description": "For contradiction_update / knowledge_health: the correct up-to-date value"
+          "description": "For contradiction_update: the correct up-to-date value"
         },
         "evidence_event_ids": {
           "type": "array",
@@ -166,7 +178,6 @@
           "conflict_resolution_accuracy",
           "freshness_accuracy",
           "expired_memory_suppression",
-          "reminder_timing_accuracy",
           "long_term_recall"
         ]
       }
