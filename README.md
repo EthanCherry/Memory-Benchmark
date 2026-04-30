@@ -144,7 +144,7 @@ benchmarks/
 
 - **LONGMEMEVAL** (ICLR 2025, arXiv:2410.10813) — 长时序记忆评测、Recall@k 指标设计
 - **LOCOMO** (ACL Findings 2024, arXiv:2402.17753) — 对抗性测试、多跳推理评测
-- **MemScope 评测方案 v2.0** — 8维度结构、难度分级、规则判分优先原则
+
 
 详见 [`docs/benchmark_generation_plan.md`](docs/benchmark_generation_plan.md)。
 

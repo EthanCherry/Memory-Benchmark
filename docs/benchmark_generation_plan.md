@@ -3,7 +3,7 @@
 > **项目**: 飞书 OpenClaw 赛道 — 企业级长程协作 Memory 系统  
 > **文档版本**: v0.1  
 > **创建时间**: 2026-04-30  
-> **参考基准**: LONGMEMEVAL (ICLR 2025)、LOCOMO (ACL Findings 2024)、MemScope 评测方案 v2.0
+> **参考基准**: LONGMEMEVAL (ICLR 2025)、LOCOMO (ACL Findings 2024)
 
 ---
 
@@ -30,7 +30,7 @@
 |------|---------------|
 | **LONGMEMEVAL** (ICLR 2025) | 7种问题类型分类、Recall@k 指标、haystack 干扰设计、时间推理评测 |
 | **LOCOMO** (ACL Findings 2024) | single-hop/multi-hop/temporal/adversarial 四类分法、对抗性测试设计 |
-| **MemScope 评测方案 v2.0** | 8维度×子类别结构、easy/medium/hard 三级难度、规则判分优先原则 |
+
 | **LarkCopilot Benchmark Report** | PRD指标映射表格、可复现命令入口、失败分类与修复建议格式 |
 
 ### 2.2 与公开基准的对比
@@ -368,6 +368,5 @@ Step 7：运行 run_benchmark.py 输出评测报告
 
 1. Wu, D., et al. (2025). LongMemEval: Benchmarking Chat Assistants on Long-Term Interactive Memory. *ICLR 2025*. arXiv:2410.10813.
 2. Maharana, A., et al. (2024). Evaluating Very Long-Term Conversational Memory of LLM Agents. *ACL Findings 2024*. arXiv:2402.17753.
-3. MemScope 评测方案 v2.0. QiZishi/MemScope, 2026.
 4. Feishu Memory Copilot Benchmark Report. adjcjh777/lark_ai_challenge_openclaw_longterm_memory, 2026.
 5. 飞书 OpenClaw 赛道-企业级长程协作 Memory 系统（公开版）. https://bytedance.larkoffice.com/wiki/TYewweOPuiHMtBkA1aXcldJonic
