@@ -48,7 +48,7 @@
 | **公式** | `1 if correct_memory in top3_results else 0` |
 | **目标** | ≥ 0.85 |
 | **适用** | 所有数据集 |
-| **来源** | 借鉴 LONGMEMEVAL 的 Recall@k 设计 |
+| **来源** | 借鉴 LONGMEMEVAL (ICLR 2025) 的 Recall@k 设计，MemBench (ACL 2025) 同样采用类似召回指标 |
 
 ### 2.3 keyword_match
 

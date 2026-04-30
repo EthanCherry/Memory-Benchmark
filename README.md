@@ -144,6 +144,8 @@ benchmarks/
 
 - **LONGMEMEVAL** (ICLR 2025, arXiv:2410.10813) — 长时序记忆评测、Recall@k 指标设计
 - **LOCOMO** (ACL Findings 2024, arXiv:2402.17753) — 对抗性测试、多跳推理评测
+- **MemBench** (ACL Findings 2025, arXiv:2506.21605) — 事实/反思双层次 × 参与/观察双场景 × 准确/召回/容量/效率四指标
+- **Memory for Autonomous LLM Agents** (Survey, 2026, arXiv:2603.07670) — Agent 记忆机制与评测系统性综述
 
 
 详见 [`docs/benchmark_generation_plan.md`](docs/benchmark_generation_plan.md)。

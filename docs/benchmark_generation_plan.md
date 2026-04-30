@@ -3,7 +3,7 @@
 > **项目**: 飞书 OpenClaw 赛道 — 企业级长程协作 Memory 系统  
 > **文档版本**: v0.1  
 > **创建时间**: 2026-04-30  
-> **参考基准**: LONGMEMEVAL (ICLR 2025)、LOCOMO (ACL Findings 2024)
+> **参考基准**: LONGMEMEVAL (ICLR 2025)、LOCOMO (ACL Findings 2024)、MemBench (ACL Findings 2025)
 
 ---
 
@@ -30,19 +30,20 @@
 |------|---------------|
 | **LONGMEMEVAL** (ICLR 2025) | 7种问题类型分类、Recall@k 指标、haystack 干扰设计、时间推理评测 |
 | **LOCOMO** (ACL Findings 2024) | single-hop/multi-hop/temporal/adversarial 四类分法、对抗性测试设计 |
+| **MemBench** (ACL Findings 2025) | 事实/反思双层次记忆、参与/观察双场景、准确/召回/容量/效率四指标体系 |
 
 | **LarkCopilot Benchmark Report** | PRD指标映射表格、可复现命令入口、失败分类与修复建议格式 |
 
 ### 2.2 与公开基准的对比
 
-| 对比维度 | LONGMEMEVAL | LOCOMO | **本 Benchmark** |
-|----------|-------------|--------|-----------------|
-| 样本数 | 500 | 1,813 | 40 (v0) → 240 (v1) |
-| 会话跨度 | 40-500会话 | 35会话 | 2年时间跨度 |
-| 评测方式 | LLM-as-judge | 人工+自动 | 规则判分（v0），LLM judge（v1） |
-| 问题类型 | 7种 | 4种 | 8维度×子类别 |
-| 业务场景 | 通用对话 | 日常对话 | 企业办公/研发协作 |
-| 核心指标 | QA准确率 | QA准确率 | 命中率 + 效能指标 |
+| 对比维度 | LONGMEMEVAL | LOCOMO | MemBench | **本 Benchmark** |
+|----------|-------------|--------|----------|-----------------|
+| 样本数 | 500 | 1,813 | ~65k | 40 (v0) → 240 (v1) |
+| 会话跨度 | 40-500会话 | 35会话 | 多轮对话 | 2年时间跨度 |
+| 评测方式 | LLM-as-judge | 人工+自动 | 多选题+检索判分 | 规则判分（v0），LLM judge（v1） |
+| 问题类型 | 7种 | 4种 | 事实/反思×单跳/多跳/比较/更新等 | 8维度×子类别 |
+| 业务场景 | 通用对话 | 日常对话 | 通用 Agent | 企业办公/研发协作 |
+| 核心指标 | QA准确率 | QA准确率 | 准确/召回/容量/效率 | 命中率 + 效能指标 |
 
 ---
 
@@ -368,5 +369,7 @@ Step 7：运行 run_benchmark.py 输出评测报告
 
 1. Wu, D., et al. (2025). LongMemEval: Benchmarking Chat Assistants on Long-Term Interactive Memory. *ICLR 2025*. arXiv:2410.10813.
 2. Maharana, A., et al. (2024). Evaluating Very Long-Term Conversational Memory of LLM Agents. *ACL Findings 2024*. arXiv:2402.17753.
-4. Feishu Memory Copilot Benchmark Report. adjcjh777/lark_ai_challenge_openclaw_longterm_memory, 2026.
-5. 飞书 OpenClaw 赛道-企业级长程协作 Memory 系统（公开版）. https://bytedance.larkoffice.com/wiki/TYewweOPuiHMtBkA1aXcldJonic
+3. Tan, H., Zhang, Z., Ma, C., Chen, X., Dai, Q., & Dong, Z. (2025). MemBench: Towards More Comprehensive Evaluation on the Memory of LLM-based Agents. *ACL Findings 2025*. arXiv:2506.21605.
+4. Du, P. (2026). Memory for Autonomous LLM Agents: Mechanisms, Evaluation, and Emerging Frontiers. arXiv:2603.07670.
+5. Feishu Memory Copilot Benchmark Report. adjcjh777/lark_ai_challenge_openclaw_longterm_memory, 2026.
+6. 飞书 OpenClaw 赛道-企业级长程协作 Memory 系统（公开版）. https://bytedance.larkoffice.com/wiki/TYewweOPuiHMtBkA1aXcldJonic
