@@ -1,0 +1,176 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LarkMemory Benchmark Case Schema",
+  "description": "Standard schema for LarkMemory enterprise memory benchmark test cases",
+  "version": "1.0.0",
+  "type": "object",
+  "required": ["case_id", "category", "scenario", "difficulty", "input_events", "query", "expected", "metrics"],
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "description": "Unique identifier for the test case, format: {category_abbr}_{NNN}",
+      "pattern": "^[a-z_]+_[0-9]{3}$",
+      "examples": ["decision_001", "anti_002", "command_003"]
+    },
+    "category": {
+      "type": "string",
+      "description": "Dataset category this case belongs to",
+      "enum": [
+        "anti_interference",
+        "contradiction_update",
+        "efficiency",
+        "command_memory",
+        "decision_memory",
+        "preference_memory",
+        "knowledge_health",
+        "long_term_memory"
+      ]
+    },
+    "scenario": {
+      "type": "string",
+      "description": "One-sentence description of the business scenario"
+    },
+    "difficulty": {
+      "type": "string",
+      "description": "Difficulty level of this test case",
+      "enum": ["easy", "medium", "hard"]
+    },
+    "input_events": {
+      "type": "array",
+      "description": "Sequence of events to be ingested into the memory system",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["event_id", "timestamp", "source", "content"],
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "description": "Unique event identifier within this case (e.g., e1, noise_1)"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 datetime of the event"
+          },
+          "source": {
+            "type": "string",
+            "description": "Origin of the event",
+            "enum": ["cli", "feishu_group", "feishu_doc", "feishu_task", "feishu_meeting", "feishu_chat"]
+          },
+          "speaker": {
+            "type": "string",
+            "description": "Name or role of the person who produced this event"
+          },
+          "content": {
+            "type": "string",
+            "description": "Actual text content of the event"
+          },
+          "context": {
+            "type": "object",
+            "description": "Additional contextual metadata",
+            "properties": {
+              "project": { "type": "string" },
+              "cwd": { "type": "string" },
+              "user_id": { "type": "string" },
+              "chat_id": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "query": {
+      "type": "string",
+      "description": "The retrieval query or task trigger sent to the memory system after ingestion"
+    },
+    "expected": {
+      "type": "object",
+      "description": "Ground truth for scoring this case",
+      "required": ["should_retrieve", "answer_keywords"],
+      "properties": {
+        "should_retrieve": {
+          "type": "boolean",
+          "description": "Whether the system should return a non-empty, relevant result"
+        },
+        "memory_type": {
+          "type": "string",
+          "description": "Expected memory type tag",
+          "enum": ["decision", "preference", "command", "knowledge", "event", "unknown"]
+        },
+        "answer_keywords": {
+          "type": "array",
+          "description": "Keywords that MUST appear in the system's response",
+          "items": { "type": "string" }
+        },
+        "should_not_contain": {
+          "type": "array",
+          "description": "Strings that must NOT appear in the system's response",
+          "items": { "type": "string" }
+        },
+        "latest_value": {
+          "type": "string",
+          "description": "For contradiction_update / knowledge_health: the correct up-to-date value"
+        },
+        "evidence_event_ids": {
+          "type": "array",
+          "description": "event_id(s) in input_events that serve as ground-truth evidence",
+          "items": { "type": "string" }
+        },
+        "superseded_event_ids": {
+          "type": "array",
+          "description": "event_id(s) that have been superseded and should NOT be cited as active",
+          "items": { "type": "string" }
+        },
+        "suggested_command": {
+          "type": "string",
+          "description": "For command_memory / efficiency: the exact command the system should recommend"
+        },
+        "baseline_chars": {
+          "type": "integer",
+          "description": "For efficiency: character count without memory assistance"
+        },
+        "actual_chars": {
+          "type": "integer",
+          "description": "For efficiency: character count with memory assistance (user input only)"
+        },
+        "min_saving_rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "For efficiency: minimum required character/step saving rate"
+        }
+      }
+    },
+    "metrics": {
+      "type": "array",
+      "description": "List of metric IDs to evaluate for this case",
+      "items": {
+        "type": "string",
+        "enum": [
+          "recall_at_1",
+          "recall_at_3",
+          "keyword_match",
+          "evidence_match",
+          "should_not_contain_match",
+          "latest_value_accuracy",
+          "old_value_suppression",
+          "noise_robustness",
+          "top1_hit",
+          "command_exact_match",
+          "char_saving_rate",
+          "step_saving_rate",
+          "decision_match",
+          "reason_match",
+          "rejected_option_match",
+          "preference_match",
+          "condition_match",
+          "conflict_resolution_accuracy",
+          "freshness_accuracy",
+          "expired_memory_suppression",
+          "reminder_timing_accuracy",
+          "long_term_recall"
+        ]
+      }
+    }
+  },
+  "additionalProperties": false
+}
