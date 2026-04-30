@@ -157,3 +157,9 @@ benchmarks/
 | v0.1 | 方案文档 + schema + mini benchmark（40条） | ✅ **当前** |
 | v0.2 | 每类扩展到 30 条（240条），格式确认后 | ⏳ 待扩展 |
 | v1.0 | 240条 + 自动评测脚本 + benchmark report | ⏳ 规划中 |
+
+---
+
+## Contributors
+
+- **[Ethan](https://github.com/EthanCherry)** — Benchmark 设计、数据集构建、文档编写
