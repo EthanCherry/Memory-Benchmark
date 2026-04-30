@@ -208,5 +208,4 @@ run_benchmark.py 输出报告
 2. Maharana, A., et al. (2024). Evaluating Very Long-Term Conversational Memory of LLM Agents. *ACL Findings 2024*. arXiv:2402.17753.
 3. Tan, H., Zhang, Z., Ma, C., Chen, X., Dai, Q., & Dong, Z. (2025). MemBench: Towards More Comprehensive Evaluation on the Memory of LLM-based Agents. *ACL Findings 2025*. arXiv:2506.21605.
 4. Du, P. (2026). Memory for Autonomous LLM Agents: Mechanisms, Evaluation, and Emerging Frontiers. arXiv:2603.07670.
-5. Feishu Memory Copilot Benchmark Report. adjcjh777/lark_ai_challenge_openclaw_longterm_memory, 2026.
-6. 飞书 OpenClaw 赛道-企业级长程协作 Memory 系统（公开版）. https://bytedance.larkoffice.com/wiki/TYewweOPuiHMtBkA1aXcldJonic
+5. 飞书 OpenClaw 赛道-企业级长程协作 Memory 系统（公开版）. https://bytedance.larkoffice.com/wiki/TYewweOPuiHMtBkA1aXcldJonic
