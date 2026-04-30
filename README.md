@@ -142,7 +142,12 @@ benchmarks/
 | `category` | 所属方向（command_memory / decision_memory / preference_memory / knowledge_health） |
 | `test_type` | 测试类型（retrieval_recall / anti_interference / contradiction_update / efficiency / long_term_retention） |
 | `time_span_days` | 事件时间跨度（天），用于量化长时序记忆难度 |
-| `difficulty` | easy（≤1天）/ medium（≤14天）/ hard（>14天 或 大量噪声） |
+| `difficulty` | easy（≤7天）/ medium（8~90天）/ hard（>90天），基于企业时间锚点（日/周/迭代/季度/年）和学术记忆保持研究 |
+
+> **难度分级调研依据**：
+> - **easy ≤7 天**：同一迭代内的工作记忆窗口，对应 LOCOMO 单 session 内记忆范围
+> - **medium 8~90 天**：跨迭代/跨月，需要跨会话检索，对应 LongMemEvalS (~50 sessions) 的跨会话推理
+> - **hard >90 天**：跨季度/跨年，测试真正的"长时序"记忆，学术界（Agent Memory Survey 2026）明确指出这是"尚未解决"的挑战
 
 完整字段定义见 [`schema.json`](schema.json)。
 

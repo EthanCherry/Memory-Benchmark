@@ -90,7 +90,7 @@
 | `category` | enum | 4 个方向之一 |
 | `test_type` | enum | 5 种测试类型之一 |
 | `scenario` | string | 业务场景描述 |
-| `difficulty` | enum | easy / medium / hard |
+| `difficulty` | enum | easy (≤7d) / medium (8-90d) / hard (>90d)，基于企业时间锚点和学术记忆研究 |
 | `time_span_days` | int | 事件时间跨度（天） |
 | `input_events` | array | 摄入事件序列 |
 | `query` | string | 检索问题 |
@@ -111,11 +111,22 @@
 
 ## 5. 难度分级规则
 
-| 难度 | time_span_days | 噪声数量 | 场景特征 |
-|------|---------------|---------|---------|
-| **easy** | ≤ 1 天 | 0-2 条 | 同日、同项目、无冲突 |
-| **medium** | 2-14 天 | 3-10 条 | 跨周、轻噪声、单次冲突 |
-| **hard** | > 14 天 | > 10 条 | 跨月/跨季、大量噪声、多次冲突/撤回 |
+基于企业时间锚点（日/周/迭代/季度/年）和学术记忆保持研究（LongMemEval、LOCOMO、MemBench、Agent Memory Survey 2026）：
+
+| 难度 | time_span_days | 企业时间锚点 | 学术对标 | 场景特征 |
+|------|---------------|-------------|---------|---------|
+| **easy** | ≤ 7 天 | 同一迭代内，活跃工作记忆窗口 | LOCOMO 单 session 内记忆范围 | 同项目、无/极少噪声、无冲突 |
+| **medium** | 8~90 天 | 跨迭代/跨月 | LongMemEvalS (~50 sessions) 跨会话推理 | 跨项目、轻-中噪声、单次冲突 |
+| **hard** | > 90 天 | 跨季度/跨年 | 学术界公认"尚未解决"的长期保留挑战 (Agent Memory Survey 2026) | 大量噪声、多次冲突/撤回、长时间无复现 |
+
+> **设计依据**：
+> - LongMemEval (ICLR 2025) 以 ~50~500 个 session 衡量长程记忆，对应企业场景的跨周/跨月
+> - LOCOMO (ACL 2024) 最多 35 个 session + Temporal Event Graph，短期记忆范围
+> - MemBench (ACL 2025) 在 100k tokens 上下文后记忆性能显著下降
+> - Agent Memory Survey (2026) 明确指出"跨数周到数月的可靠知识保留尚未解决"，一周滚动摘要经 3 次压缩后丢失关键信息
+> - 企业协作有自然时间锚点：日报（1天）、周会（7天）、迭代周期（2~4周）、季度复盘（90天）、年度规划（365天）
+>
+> **每个 hard 级别的 case 应至少覆盖半年（180天）或一年（365天）的时间跨度**，以真正测试"长时序"能力。
 
 ---
 

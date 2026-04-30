@@ -39,7 +39,7 @@
     },
     "difficulty": {
       "type": "string",
-      "description": "Difficulty level. easy=same-day/same-project, medium=cross-week/light-noise, hard=cross-month/heavy-noise/complex-conflict",
+      "description": "Difficulty level. easy=≤7d (same-week active memory), medium=8-90d (cross-sprint/cross-month), hard=>90d (cross-quarter/cross-year,学术界'尚未解决'的长期保留挑战). Based on enterprise time anchors (daily/weekly/sprint/quarterly/annual) and academic memory retention research (LongMemEval, LOCOMO, MemBench).",
       "enum": ["easy", "medium", "hard"]
     },
     "time_span_days": {
