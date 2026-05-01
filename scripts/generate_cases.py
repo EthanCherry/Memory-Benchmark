@@ -17,22 +17,22 @@ DATASETS_DIR = BASE_DIR / "datasets"
 
 DIRECTIONS = {
     "command_memory": {
-        "test_types": ["retrieval_recall", "efficiency", "anti_interference"],
+        "test_types": ["retrieval_recall", "efficiency", "anti_interference", "cross_project"],
         "source": "cli",
         "description": "CLI 高频命令与工作流记忆",
     },
     "decision_memory": {
-        "test_types": ["retrieval_recall", "anti_interference", "contradiction_update", "efficiency", "long_term_retention"],
+        "test_types": ["retrieval_recall", "anti_interference", "contradiction_update", "efficiency", "long_term_retention", "cross_project", "abstention"],
         "source": "feishu_group",
         "description": "飞书项目决策与上下文记忆",
     },
     "preference_memory": {
-        "test_types": ["retrieval_recall", "anti_interference", "contradiction_update", "efficiency"],
+        "test_types": ["retrieval_recall", "anti_interference", "contradiction_update", "efficiency", "cross_project", "abstention"],
         "source": "feishu_chat",
         "description": "个人工作习惯与偏好记忆",
     },
     "knowledge_health": {
-        "test_types": ["retrieval_recall", "anti_interference", "contradiction_update", "long_term_retention"],
+        "test_types": ["retrieval_recall", "anti_interference", "contradiction_update", "long_term_retention", "abstention"],
         "source": "feishu_doc",
         "description": "团队知识断层与遗忘预警",
     },

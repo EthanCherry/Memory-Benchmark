@@ -1,7 +1,7 @@
 # LarkMemory Benchmark 评测报告
 
 > **评测日期**: YYYY-MM-DD  
-> **评测版本**: v0.2  
+> **评测版本**: v1.0  
 > **Memory Engine 版本**: vX.X.X  
 > **评测环境**: [本地/服务器配置]
 
@@ -32,8 +32,11 @@
 | ⭐ contradiction_update | 比赛强制 | X.XX | B, C, D |
 | ⭐ efficiency | 比赛强制 | X.XX | A, B, C |
 | long_term_retention | — | X.XX | B, D |
+| cross_project | — | X.XX | A, B, C |
+| abstention | — | X.XX | B, C, D |
 
 > ⭐ 比赛文档明确要求至少包含抗干扰、矛盾更新、效能三类测试。
+> cross_project 和 abstention 为企业级记忆系统的差异化评测维度。
 
 ## 4. 分方向详细结果
 
@@ -44,6 +47,7 @@
 | retrieval_recall | X | X | X.XX |
 | efficiency | X | X | X.XX |
 | anti_interference | X | X | X.XX |
+| cross_project | X | X | X.XX |
 | **小计** | **X** | **X** | **X.XX** |
 
 ### 4.2 decision_memory（方向 B：飞书决策记忆）
@@ -55,6 +59,8 @@
 | contradiction_update | X | X | X.XX |
 | efficiency | X | X | X.XX |
 | long_term_retention | X | X | X.XX |
+| cross_project | X | X | X.XX |
+| abstention | X | X | X.XX |
 | **小计** | **X** | **X** | **X.XX** |
 
 ### 4.3 preference_memory（方向 C：个人偏好记忆）
@@ -65,6 +71,8 @@
 | anti_interference | X | X | X.XX |
 | contradiction_update | X | X | X.XX |
 | efficiency | X | X | X.XX |
+| cross_project | X | X | X.XX |
+| abstention | X | X | X.XX |
 | **小计** | **X** | **X** | **X.XX** |
 
 ### 4.4 knowledge_health（方向 D：团队知识健康）
@@ -75,6 +83,7 @@
 | anti_interference | X | X | X.XX |
 | contradiction_update | X | X | X.XX |
 | long_term_retention | X | X | X.XX |
+| abstention | X | X | X.XX |
 | **小计** | **X** | **X** | **X.XX** |
 
 ## 5. 指标详情
@@ -89,6 +98,10 @@
 | old_value_suppression | X | X | X.X% |
 | char_saving_rate | X | X | X.X% |
 | long_term_recall | X | X | X.X% |
+| abstention_accuracy | X | X | X.X% |
+| hallucination_rate | X | X | X.X% |
+| scope_accuracy | X | X | X.X% |
+| cross_project_leakage_rate | X | X | X.X% |
 
 ## 6. 失败 case 分析
 

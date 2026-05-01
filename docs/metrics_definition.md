@@ -1,7 +1,8 @@
 # LarkMemory Benchmark 指标定义
 
-> **文档版本**: v0.2  
+> **文档版本**: v1.0  
 > **创建时间**: 2026-04-30  
+> **最后更新**: 2026-05-01  
 > **适用阶段**: v0（规则判分）、v1（LLM-as-Judge 扩展）
 
 ---
@@ -85,10 +86,11 @@
 
 | 属性 | 说明 |
 |------|------|
-| **定义** | 加入噪声后系统是否仍能召回正确记忆 |
-| **判分** | `recall_at_3 的得分在加入噪声后是否保持 ≥ 原始得分的 80%` |
+| **定义** | 在噪声事件干扰下，系统是否仍能正确召回并回答关键记忆 |
+| **判分** | `evidence_match × keyword_match`，即同时满足证据命中和关键词命中才算通过 |
 | **目标** | ≥ 0.80 |
 | **适用** | command_memory, decision_memory, preference_memory, knowledge_health |
+| **备注** | 不要求 clean/noisy 配对测试。主评测采用 noisy 单场景判分；如需量化鲁棒性下降幅度，可补充少量 paired sentinel case（见 adapter_mapping.md §4） |
 
 ### 3.2 contradiction_update（矛盾更新）
 
@@ -229,6 +231,50 @@
 | **判分** | `1 if latest knowledge version returned else 0` |
 | **目标** | ≥ 0.85 |
 | **适用** | knowledge_health |
+
+### 3.9 拒答与防幻觉专项（abstention）
+
+#### abstention_accuracy
+
+| 属性 | 说明 |
+|------|------|
+| **定义** | 当记忆库中无相关信息时，系统是否正确拒绝回答而非编造 |
+| **判分** | `1 if system responds with "unknown" / "no record" / refusal to answer else 0` |
+| **目标** | ≥ 0.90 |
+| **适用** | decision_memory, preference_memory, knowledge_health |
+| **来源** | 借鉴 LONGMEMEVAL (ICLR 2025) 的 abstention 能力维度，评估系统"知之为知之，不知为不知"的能力 |
+
+#### hallucination_rate
+
+| 属性 | 说明 |
+|------|------|
+| **定义** | 在拒答场景下，系统回答中出现幻觉内容的比例 |
+| **判分** | `出现幻觉回答的 case 数 / 总 abstention case 数`（越低越好） |
+| **目标** | ≤ 0.10 |
+| **适用** | decision_memory, preference_memory, knowledge_health |
+| **备注** | 与 abstention_accuracy 互补：abstention_accuracy 衡量"正确拒答的比例"，hallucination_rate 衡量"错误编造的比例"。两者结合可完整评估系统的诚实性 |
+
+### 3.10 跨项目隔离专项（cross_project）
+
+#### scope_accuracy
+
+| 属性 | 说明 |
+|------|------|
+| **定义** | 系统在多项目场景下，是否只返回当前项目上下文内的记忆 |
+| **判分** | `1 if retrieved memories all belong to the queried project scope else 0` |
+| **目标** | ≥ 0.90 |
+| **适用** | command_memory, decision_memory, preference_memory |
+| **备注** | 跨项目隔离是企业级记忆系统与消费级记忆系统的核心差异。系统应知道每条记忆的归属上下文，在正确作用域内召回正确记忆 |
+
+#### cross_project_leakage_rate
+
+| 属性 | 说明 |
+|------|------|
+| **定义** | 系统返回了不属于当前查询作用域的记忆的比例 |
+| **判分** | `包含跨项目泄露的 case 数 / 总 cross_project case 数`（越低越好） |
+| **目标** | ≤ 0.10 |
+| **适用** | command_memory, decision_memory, preference_memory |
+| **备注** | 与 scope_accuracy 互补：scope_accuracy 衡量"正确隔离的比例"，leakage_rate 衡量"错误泄露的比例"。即使 scope_accuracy 高，leakage_rate 仍可揭示偶发性的跨项目混淆 |
 
 ---
 

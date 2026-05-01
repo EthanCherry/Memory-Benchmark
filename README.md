@@ -1,7 +1,7 @@
 # LarkMemory Benchmark
 
 > 飞书 OpenClaw 赛道 — 企业级长程协作 Memory 系统 评测数据集  
-> **Benchmark Version**: v1.0 (4-direction × 7 test-type structure, 51 cases)
+> **Benchmark Version**: v1.0 (4-direction × 7 test-type structure, 49 cases)
 
 ---
 
@@ -207,8 +207,4 @@ benchmarks/
 | v0.2 | 重构为 4 方向 × 5 测试类型结构（40条），难度分级校准 | ✅ 已归档 |
 | v1.0 | 7 测试类型 + 双层判分 + 精细矛盾更新 + 拒答 + 跨项目 + 噪声升级（49条） | ✅ **当前** |
 
----
 
-## Contributors
-
-- **[Ethan](https://github.com/EthanCherry)** — Benchmark 设计、数据集构建、文档编写
