@@ -1,7 +1,8 @@
 # LarkMemory Benchmark
 
-> 飞书 OpenClaw 赛道 — 企业级长程协作 Memory 系统 评测数据集  
-> **Benchmark Version**: v1.0 (4-direction × 7 test-type structure, 49 cases)
+> 飞书 OpenClaw 赛道 — 企业级长程协作 Memory 系统评测数据集  
+> **Benchmark Version**: v1.0 (4-direction × 7 test-type structure, 49 cases)  
+> **Dataset Format**: v4 (MemScope-style JSON) + v3 (legacy JSONL)
 
 ---
 
@@ -11,7 +12,7 @@
 
 本 benchmark 按**比赛文档的四个业务方向**（A/B/C/D）组织为 4 个独立 benchmark，每个 benchmark 内部包含该方向适用的**测试类型**。
 
-> **为什么按方向而不是按测试类型分？**
+> **为什么按方向而不是按测试类型分？**  
 > 比赛文档定义了 4 个探索方向（CLI 命令记忆、飞书决策记忆、个人偏好记忆、团队知识健康），同时要求至少包含 3 类测试（抗干扰、矛盾更新、效能验证）。每个方向不一定适用所有测试类型（例如 CLI 命令是规律统计，不存在矛盾更新），因此按方向分 benchmark 更合理，每个内部标注适用的测试类型和占比。
 
 ---
@@ -29,7 +30,7 @@
 ### 测试类型说明
 
 | 测试类型 | 比赛要求 | 说明 |
-|---------|---------|------|
+|---------|---------|------|---------|
 | `retrieval_recall` | — | 基础记忆召回能力，含事件链式多轮决策提取 |
 | `anti_interference` | ⭐ 比赛强制 | 大量无关/高相似信息干扰下仍能召回关键记忆 |
 | `contradiction_update` | ⭐ 比赛强制 | 新旧信息冲突时区分历史值与当前有效值 |
@@ -43,11 +44,84 @@
 
 ---
 
+## 数据集格式（v3 → v4）
+
+本仓库同时支持两种格式：
+
+| | v3（旧版） | v4（新版，推荐） |
+|---|---|---|
+| 文件格式 | `.jsonl`（每行一个 case） | `.json`（元数据头 + `test_cases` 数组） |
+| Schema | `schema.v3.json` | `schema.json` |
+| 事件字段 | `input_events`（含 `event_id`、`source`、`speaker`） | `setup.messages`（含 `role`、`content`、`event_id`） |
+| query 字段 | 纯字符串 | 字符串 或 结构化对象 `{"type": "", "content": ""}` |
+| 适用场景 | 向后兼容 | 飞书环境、MemScope 对齐 |
+
+### v4 格式示例
+
+```json
+{
+  "dataset_name": "decision_memory",
+  "version": "3.0",
+  "description": "决策记忆能力评测",
+  "total_cases": 16,
+  "difficulty_distribution": {"easy": 5, "medium": 6, "hard": 5},
+  "test_cases": [
+    {
+      "test_id": "dec_contra_001",
+      "test_type": "contradiction_update",
+      "name": "决策方案变更",
+      "description": "方案变更场景；包含5条噪声事件；测试类型: contradiction_update；难度: medium",
+      "setup": {
+        "messages": [
+          {
+            "event_id": "e1",
+            "role": "技术负责人",
+            "content": "缓存层我们决定用Redis。",
+            "timestamp": "2026-04-01T10:00:00",
+            "context": {"project": "LarkMemory"}
+          },
+          {
+            "event_id": "e2",
+            "role": "技术负责人",
+            "content": "经过评估，我们最终决定改用Memcached。",
+            "timestamp": "2026-04-15T14:00:00",
+            "context": {"project": "LarkMemory"}
+          }
+        ]
+      },
+      "query": {
+        "type": "search",
+        "content": "我们的缓存层最终用什么方案？"
+      },
+      "expected": {
+        "should_retrieve": true,
+        "current_value": "Memcached",
+        "inactive_values": ["Redis"],
+        "answer_keywords": ["Memcached", "内存占用过高"],
+        "evidence_event_ids": ["e2"],
+        "superseded_event_ids": ["e1"]
+      },
+      "difficulty": "medium",
+      "priority": "P1",
+      "tags": ["contradiction", "update", "decision-memory", "medium"],
+      "metrics": ["latest_value_accuracy", "old_value_suppression", "evidence_match"]
+    }
+  ]
+}
+```
+
+**双层判分机制**：
+- **answer_correct**：答案文本是否正确（基于 `answer_keywords`、`current_value` 等）
+- **evidence_correct**：证据来源是否正确（基于 `evidence_event_ids`）
+
+---
+
 ## 快速开始
 
 ### 1. 验证数据格式
 
 ```bash
+# 同时验证 .jsonl (v3) 和 .json (v4) 所有文件
 python scripts/validate_schema.py
 ```
 
@@ -57,10 +131,13 @@ python scripts/validate_schema.py
 # 如果使用 LarkMemory 默认后端（默认端口 8765）
 export MEMORY_ENGINE_BASE_URL=http://127.0.0.1:8765
 
-# 运行全量评测
+# 运行全量评测（自动加载 .json 文件）
 python scripts/run_benchmark.py --all
 
-# 运行单个 benchmark
+# 运行单个 benchmark（v4 JSON 格式）
+python scripts/run_benchmark.py --dataset datasets/decision_memory.json
+
+# 运行单个 benchmark（v3 JSONL 格式，向后兼容）
 python scripts/run_benchmark.py --dataset datasets/decision_memory.jsonl
 
 # 按测试类型过滤
@@ -70,7 +147,14 @@ python scripts/run_benchmark.py --all --test-type anti_interference
 python scripts/run_benchmark.py --all --output reports/eval_$(date +%Y%m%d).json
 ```
 
-### 3. 扩展数据集（需 Qwen30B 或其他 LLM）
+### 3. JSONL → JSON 格式转换
+
+```bash
+# 将现有 .jsonl 文件转换为 v4 MemScope 风格 .json 文件
+python scripts/convert_to_conversation_format.py
+```
+
+### 4. 扩展数据集（需 Qwen30B 或其他 LLM）
 
 ```bash
 export LLM_BASE_URL=http://your-qwen-service:11434
@@ -87,15 +171,21 @@ python scripts/validate_schema.py
 ```
 benchmarks/
 ├── README.md                          # 本文件
-├── schema.json                        # 数据格式 JSON Schema v3
-├── datasets/                          # 4 个方向 benchmark（JSONL格式）
-│   ├── command_memory.jsonl           # 方向 A：CLI 命令记忆（11条）
-│   ├── decision_memory.jsonl          # 方向 B：飞书决策记忆（16条）
-│   ├── preference_memory.jsonl        # 方向 C：个人偏好记忆（13条）
-│   └── knowledge_health.jsonl         # 方向 D：团队知识健康（9条）
+├── schema.json                        # 数据格式 JSON Schema v4（MemScope 风格）
+├── schema.v3.json                     # 数据格式 JSON Schema v3（旧版 JSONL，向后兼容）
+├── datasets/                          # 4 个方向 benchmark
+│   ├── command_memory.jsonl           # 方向 A：CLI 命令记忆（11条，v3 格式）
+│   ├── command_memory.json            # 方向 A：CLI 命令记忆（11条，v4 格式）
+│   ├── decision_memory.jsonl          # 方向 B：飞书决策记忆（16条，v3 格式）
+│   ├── decision_memory.json           # 方向 B：飞书决策记忆（16条，v4 格式）
+│   ├── preference_memory.jsonl        # 方向 C：个人偏好记忆（13条，v3 格式）
+│   ├── preference_memory.json         # 方向 C：个人偏好记忆（13条，v4 格式）
+│   ├── knowledge_health.jsonl         # 方向 D：团队知识健康（9条，v3 格式）
+│   └── knowledge_health.json          # 方向 D：团队知识健康（9条，v4 格式）
 ├── scripts/
-│   ├── validate_schema.py             # 数据格式验证工具（含语义校验）
-│   ├── run_benchmark.py               # 评测运行器（支持按 test_type 过滤）
+│   ├── validate_schema.py             # 数据格式验证工具（v3/v4 双格式支持）
+│   ├── run_benchmark.py               # 评测运行器（支持按 test_type 过滤，双格式加载）
+│   ├── convert_to_conversation_format.py  # JSONL → JSON v4 格式转换工具
 │   └── generate_cases.py             # LLM 批量生成用例工具
 └── docs/
     ├── benchmark_generation_plan.md   # 评测方案设计文档 v1.0
@@ -105,57 +195,18 @@ benchmarks/
 
 ---
 
-## 数据格式
-
-每行一个 JSON 对象（JSONL）。核心字段：
-
-```json
-{
-  "case_id": "dec_contra_001",
-  "category": "decision_memory",
-  "test_type": "contradiction_update",
-  "scenario": "决策方案变更",
-  "difficulty": "medium",
-  "time_span_days": 21,
-  "input_events": [
-    {
-      "event_id": "e1",
-      "timestamp": "2026-04-01T10:00:00",
-      "source": "feishu_group",
-      "speaker": "技术负责人",
-      "content": "缓存层我们决定用Redis。",
-      "context": { "project": "LarkMemory" }
-    }
-  ],
-  "query": "我们的缓存层最终用什么方案？",
-  "expected": {
-    "should_retrieve": true,
-    "current_value": "Memcached",
-    "inactive_values": ["Redis"],
-    "forbidden_active_values": ["Redis"],
-    "allow_historical_mention": true,
-    "answer_keywords": ["Memcached", "内存占用过高"],
-    "evidence_event_ids": ["e2"],
-    "superseded_event_ids": ["e1"]
-  },
-  "metrics": ["latest_value_accuracy", "old_value_suppression", "evidence_match"]
-}
-```
-
-**双层判分机制**：
-- **answer_correct**：答案文本是否正确（基于 answer_keywords、current_value 等）
-- **evidence_correct**：证据来源是否正确（基于 evidence_event_ids）
-
-**关键字段说明**：
+## 关键字段说明
 
 | 字段 | 说明 |
 |------|------|
-| `category` | 所属方向（command_memory / decision_memory / preference_memory / knowledge_health） |
+| `test_id` | 唯一标识，格式：`{方向缩写}_{类型缩写}_{3位序号}`，如 `dec_contra_001` |
 | `test_type` | 测试类型（retrieval_recall / anti_interference / contradiction_update / efficiency / long_term_retention / abstention / cross_project） |
+| `setup.messages` | v4 格式的事件列表，每条含 `role`、`content`、`event_id`（对应旧版 `input_events`） |
+| `query` | v4 支持字符串或结构化对象 `{"type": "search", "content": "..."}` |
 | `time_span_days` | 事件时间跨度（天），用于量化长时序记忆难度 |
 | `difficulty` | easy（≤7天）/ medium（8~90天）/ hard（>90天） |
 | `evidence_event_ids` | 证据来源事件 ID（必填，用于双层判分） |
-| `current_value` / `inactive_values` / `forbidden_active_values` | 矛盾更新的精细判分 |
+| `current_value` / `inactive_values` | 矛盾更新的精细判分 |
 | `allow_historical_mention` | 是否允许以历史叙述方式提及旧值 |
 | `abstention_keywords` / `hallucination_triggers` | 拒答测试的判分依据 |
 
@@ -164,7 +215,7 @@ benchmarks/
 > - **medium 8~90 天**：跨迭代/跨月，需要跨会话检索，对应 LongMemEvalS (~50 sessions) 的跨会话推理
 > - **hard >90 天**：跨季度/跨年，测试真正的"长时序"记忆，学术界（Agent Memory Survey 2026）明确指出这是"尚未解决"的挑战
 
-完整字段定义见 [`schema.json`](schema.json)。
+完整字段定义见 [`schema.json`](schema.json)（v4）和 [`schema.v3.json`](schema.v3.json)（v3）。
 
 ---
 
@@ -206,6 +257,5 @@ benchmarks/
 |------|------|------|
 | v0.1 | 方案文档 + schema + 8 类 mini benchmark（40条） | ✅ 已归档 |
 | v0.2 | 重构为 4 方向 × 5 测试类型结构（40条），难度分级校准 | ✅ 已归档 |
-| v1.0 | 7 测试类型 + 双层判分 + 精细矛盾更新 + 拒答 + 跨项目 + 噪声升级（49条） | ✅ **当前** |
-
-
+| v1.0 | 7 测试类型 + 双层判分 + 精细矛盾更新 + 拒答 + 跨项目 + 噪声升级（49条） | ✅ 已归档 |
+| v1.1 | 数据集格式升级至 v4（MemScope 风格 JSON），支持双格式验证 | ✅ **当前** |
