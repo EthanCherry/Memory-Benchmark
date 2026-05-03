@@ -54,7 +54,8 @@ python scripts/validate_schema.py
 ### 2. 运行 benchmark（需先启动 Memory Engine）
 
 ```bash
-export MEMORY_ENGINE_BASE_URL=http://localhost:8000
+# 如果使用 LarkMemory 默认后端（默认端口 8765）
+export MEMORY_ENGINE_BASE_URL=http://127.0.0.1:8765
 
 # 运行全量评测
 python scripts/run_benchmark.py --all

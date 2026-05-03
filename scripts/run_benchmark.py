@@ -119,7 +119,7 @@ def main():
         output_path.parent.mkdir(parents=True, exist_ok=True)
         report = {
             "timestamp": datetime.now().isoformat(),
-            "version": "v0.2",
+            "version": "v1.0",
             "test_type_filter": args.test_type,
             "results": all_results,
         }
