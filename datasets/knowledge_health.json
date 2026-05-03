@@ -1,0 +1,914 @@
+{
+  "dataset_name": "knowledge_health",
+  "version": "3.0",
+  "description": "知识健康度评测：测试系统对团队关键知识的追踪、过期检测、矛盾更新和遗忘预警能力",
+  "total_cases": 9,
+  "difficulty_distribution": {
+    "medium": 5,
+    "hard": 4
+  },
+  "test_cases": [
+    {
+      "test_id": "kh_ret_001",
+      "name": "API Key 版本更新后的正确值召回",
+      "test_type": "retrieval_recall",
+      "description": "API Key 版本更新后的正确值召回；包含1条噪声事件；测试类型: retrieval_recall；难度: medium",
+      "setup": {
+        "messages": [
+          {
+            "role": "后端负责人",
+            "content": "当前测试环境API Key使用key_v1，有效期到4月10日。",
+            "timestamp": "2026-03-15T10:00:00",
+            "event_id": "e1",
+            "context": {
+              "project": "LarkMemory"
+            }
+          },
+          {
+            "role": "成员A",
+            "content": "测试环境日志清理脚本已部署。",
+            "timestamp": "2026-03-25T10:00:00",
+            "event_id": "noise_1"
+          },
+          {
+            "role": "后端负责人",
+            "content": "测试环境API Key已更新为key_v2，key_v1立即废弃。",
+            "timestamp": "2026-04-14T10:00:00",
+            "event_id": "e2",
+            "context": {
+              "project": "LarkMemory"
+            }
+          }
+        ],
+        "context": {
+          "project": "LarkMemory"
+        }
+      },
+      "query": {
+        "type": "search",
+        "content": "现在测试环境应该使用哪个API Key？"
+      },
+      "expected": {
+        "should_retrieve": true,
+        "memory_type": "knowledge",
+        "current_value": "key_v2",
+        "inactive_values": [
+          "key_v1"
+        ],
+        "forbidden_active_values": [
+          "key_v1"
+        ],
+        "allow_historical_mention": true,
+        "answer_keywords": [
+          "key_v2"
+        ],
+        "evidence_event_ids": [
+          "e2"
+        ],
+        "superseded_event_ids": [
+          "e1"
+        ]
+      },
+      "difficulty": "medium",
+      "priority": "P1",
+      "tags": [
+        "recall",
+        "knowledge-health",
+        "medium"
+      ],
+      "metrics": [
+        "latest_value_accuracy",
+        "expired_memory_suppression",
+        "evidence_match"
+      ],
+      "time_span_days": 30
+    },
+    {
+      "test_id": "kh_anti_001",
+      "name": "大量日常消息后的关键知识召回",
+      "test_type": "anti_interference",
+      "description": "大量日常消息后的关键知识召回；包含12条噪声事件；测试类型: anti_interference；难度: medium",
+      "setup": {
+        "messages": [
+          {
+            "role": "system",
+            "content": "系统部署架构文档：生产环境使用Kubernetes集群，3个节点，资源配额CPU 4核/内存8G。",
+            "timestamp": "2026-04-01T10:00:00",
+            "event_id": "e1",
+            "context": {
+              "project": "LarkMemory"
+            }
+          },
+          {
+            "role": "成员A",
+            "content": "今天的站会取消了。",
+            "timestamp": "2026-04-02T10:00:00",
+            "event_id": "noise_1"
+          },
+          {
+            "role": "成员B",
+            "content": "代码提交了。",
+            "timestamp": "2026-04-03T14:00:00",
+            "event_id": "noise_2"
+          },
+          {
+            "role": "成员C",
+            "content": "review done。",
+            "timestamp": "2026-04-05T09:00:00",
+            "event_id": "noise_3"
+          },
+          {
+            "role": "成员A",
+            "content": "明天有客户演示。",
+            "timestamp": "2026-04-07T10:00:00",
+            "event_id": "noise_4"
+          },
+          {
+            "role": "成员B",
+            "content": "部署完成，等待验收。",
+            "timestamp": "2026-04-09T11:00:00",
+            "event_id": "noise_5"
+          },
+          {
+            "role": "成员C",
+            "content": "请假两天。",
+            "timestamp": "2026-04-10T09:00:00",
+            "event_id": "noise_6"
+          },
+          {
+            "role": "成员A",
+            "content": "文档链接发群里了。",
+            "timestamp": "2026-04-12T10:00:00",
+            "event_id": "noise_7"
+          },
+          {
+            "role": "产品经理",
+            "content": "下周版本计划我发到飞书了。",
+            "timestamp": "2026-04-14T14:00:00",
+            "event_id": "noise_8"
+          },
+          {
+            "role": "成员B",
+            "content": "测试环境的问题已经修了。",
+            "timestamp": "2026-04-16T09:00:00",
+            "event_id": "noise_9"
+          },
+          {
+            "role": "成员C",
+            "content": "CI/CD流水线配置更新了。",
+            "timestamp": "2026-04-18T10:00:00",
+            "event_id": "noise_10"
+          },
+          {
+            "role": "成员A",
+            "content": "有人能帮忙review这个PR吗？",
+            "timestamp": "2026-04-20T11:00:00",
+            "event_id": "noise_11"
+          },
+          {
+            "role": "产品经理",
+            "content": "客户反馈整理文档我发了。",
+            "timestamp": "2026-04-21T09:00:00",
+            "event_id": "noise_12"
+          }
+        ],
+        "context": {
+          "project": "LarkMemory"
+        }
+      },
+      "query": {
+        "type": "search",
+        "content": "生产环境的资源配额是多少？"
+      },
+      "expected": {
+        "should_retrieve": true,
+        "memory_type": "knowledge",
+        "answer_keywords": [
+          "Kubernetes",
+          "CPU 4核",
+          "内存8G"
+        ],
+        "evidence_event_ids": [
+          "e1"
+        ]
+      },
+      "difficulty": "medium",
+      "priority": "P1",
+      "tags": [
+        "anti-interference",
+        "noise",
+        "knowledge-health",
+        "medium"
+      ],
+      "metrics": [
+        "recall_at_3",
+        "keyword_match",
+        "noise_robustness",
+        "evidence_match"
+      ],
+      "time_span_days": 21
+    },
+    {
+      "test_id": "kh_contra_001",
+      "name": "文档版本更新后的旧知识废弃",
+      "test_type": "contradiction_update",
+      "description": "文档版本更新后的旧知识废弃；包含1条噪声事件；测试类型: contradiction_update；难度: medium",
+      "setup": {
+        "messages": [
+          {
+            "role": "system",
+            "content": "接口认证方式：Bearer Token，有效期30天。",
+            "timestamp": "2026-03-01T10:00:00",
+            "event_id": "e1",
+            "context": {
+              "project": "LarkMemory"
+            }
+          },
+          {
+            "role": "成员A",
+            "content": "认证模块代码重构中。",
+            "timestamp": "2026-03-15T10:00:00",
+            "event_id": "noise_1"
+          },
+          {
+            "role": "system",
+            "content": "接口认证方式更新：改用OAuth2.0，Bearer Token方案废弃。",
+            "timestamp": "2026-04-14T10:00:00",
+            "event_id": "e2",
+            "context": {
+              "project": "LarkMemory"
+            }
+          }
+        ],
+        "context": {
+          "project": "LarkMemory"
+        }
+      },
+      "query": {
+        "type": "search",
+        "content": "当前接口使用什么认证方式？"
+      },
+      "expected": {
+        "should_retrieve": true,
+        "memory_type": "knowledge",
+        "current_value": "OAuth2.0",
+        "inactive_values": [
+          "Bearer Token"
+        ],
+        "forbidden_active_values": [
+          "Bearer Token"
+        ],
+        "allow_historical_mention": true,
+        "answer_keywords": [
+          "OAuth2.0"
+        ],
+        "evidence_event_ids": [
+          "e2"
+        ],
+        "superseded_event_ids": [
+          "e1"
+        ],
+        "latest_value": "OAuth2.0"
+      },
+      "difficulty": "medium",
+      "priority": "P1",
+      "tags": [
+        "contradiction",
+        "update",
+        "knowledge-health",
+        "medium"
+      ],
+      "metrics": [
+        "latest_value_accuracy",
+        "old_value_suppression",
+        "expired_memory_suppression",
+        "evidence_match"
+      ],
+      "time_span_days": 45
+    },
+    {
+      "test_id": "kh_long_001",
+      "name": "半年前的团队约定召回",
+      "test_type": "long_term_retention",
+      "description": "半年前的团队约定召回；包含10条噪声事件；测试类型: long_term_retention；难度: hard",
+      "setup": {
+        "messages": [
+          {
+            "role": "项目负责人",
+            "content": "团队约定：所有对外API文档统一使用OpenAPI 3.0规范编写，旧的Swagger 2.0文档需要迁移。",
+            "timestamp": "2025-11-01T10:00:00",
+            "event_id": "e1",
+            "context": {
+              "project": "LarkMemory"
+            }
+          },
+          {
+            "role": "成员A",
+            "content": "Swagger 2.0的迁移进度怎么样了？",
+            "timestamp": "2025-12-01T10:00:00",
+            "event_id": "noise_1"
+          },
+          {
+            "role": "成员B",
+            "content": "OpenAPI 3.0的schema验证工具找好了。",
+            "timestamp": "2025-12-20T09:00:00",
+            "event_id": "noise_2"
+          },
+          {
+            "role": "成员C",
+            "content": "新的一年加油！",
+            "timestamp": "2026-01-10T11:00:00",
+            "event_id": "noise_3"
+          },
+          {
+            "role": "成员A",
+            "content": "API文档生成脚本更新了。",
+            "timestamp": "2026-01-25T10:00:00",
+            "event_id": "noise_4"
+          },
+          {
+            "role": "产品经理",
+            "content": "Q1目标已确定。",
+            "timestamp": "2026-02-10T09:00:00",
+            "event_id": "noise_5"
+          },
+          {
+            "role": "成员B",
+            "content": "OpenAPI 3.1的规范变化有人关注吗？",
+            "timestamp": "2026-02-25T10:00:00",
+            "event_id": "noise_6"
+          },
+          {
+            "role": "成员C",
+            "content": "文档自动生成pipeline配好了。",
+            "timestamp": "2026-03-10T14:00:00",
+            "event_id": "noise_7"
+          },
+          {
+            "role": "成员A",
+            "content": "有人能帮忙review API文档吗？",
+            "timestamp": "2026-03-25T10:00:00",
+            "event_id": "noise_8"
+          },
+          {
+            "role": "产品经理",
+            "content": "下周有客户来参观，API文档要准备好。",
+            "timestamp": "2026-04-05T11:00:00",
+            "event_id": "noise_9"
+          },
+          {
+            "role": "成员B",
+            "content": "API文档的版本号要不要统一？",
+            "timestamp": "2026-04-15T09:00:00",
+            "event_id": "noise_10"
+          }
+        ],
+        "context": {
+          "project": "LarkMemory"
+        }
+      },
+      "query": {
+        "type": "search",
+        "content": "我们的API文档应该用什么规范？"
+      },
+      "expected": {
+        "should_retrieve": true,
+        "memory_type": "knowledge",
+        "answer_keywords": [
+          "OpenAPI 3.0"
+        ],
+        "inactive_values": [
+          "Swagger 2.0"
+        ],
+        "forbidden_active_values": [
+          "Swagger 2.0"
+        ],
+        "allow_historical_mention": false,
+        "evidence_event_ids": [
+          "e1"
+        ]
+      },
+      "difficulty": "hard",
+      "priority": "P2",
+      "tags": [
+        "long-term",
+        "retention",
+        "knowledge-health",
+        "hard"
+      ],
+      "metrics": [
+        "recall_at_3",
+        "long_term_recall",
+        "keyword_match",
+        "evidence_match"
+      ],
+      "time_span_days": 180
+    },
+    {
+      "test_id": "kh_ret_002",
+      "name": "遗忘预警：长期未更新的关键知识",
+      "test_type": "retrieval_recall",
+      "description": "遗忘预警：长期未更新的关键知识；包含1条噪声事件；测试类型: retrieval_recall；难度: medium",
+      "setup": {
+        "messages": [
+          {
+            "role": "system",
+            "content": "数据库备份策略：每日全量备份，保留30天。备份存储在S3，bucket名为lark-backup-prod。",
+            "timestamp": "2026-02-15T10:00:00",
+            "event_id": "e1"
+          },
+          {
+            "role": "成员A",
+            "content": "存储容量监控告警阈值已调整。",
+            "timestamp": "2026-03-10T10:00:00",
+            "event_id": "noise_1"
+          },
+          {
+            "role": "system",
+            "content": "数据库备份策略已更新：改为增量备份+每周全量，保留90天。bucket不变。",
+            "timestamp": "2026-04-15T10:00:00",
+            "event_id": "e2"
+          }
+        ]
+      },
+      "query": {
+        "type": "search",
+        "content": "当前数据库备份策略是什么？"
+      },
+      "expected": {
+        "should_retrieve": true,
+        "memory_type": "knowledge",
+        "current_value": "增量备份+每周全量",
+        "inactive_values": [
+          "每日全量备份"
+        ],
+        "forbidden_active_values": [
+          "每日全量备份",
+          "保留30天"
+        ],
+        "allow_historical_mention": true,
+        "answer_keywords": [
+          "增量备份",
+          "每周全量",
+          "保留90天",
+          "lark-backup-prod"
+        ],
+        "evidence_event_ids": [
+          "e2"
+        ],
+        "superseded_event_ids": [
+          "e1"
+        ]
+      },
+      "difficulty": "medium",
+      "priority": "P1",
+      "tags": [
+        "recall",
+        "knowledge-health",
+        "medium"
+      ],
+      "metrics": [
+        "latest_value_accuracy",
+        "recall_at_3",
+        "expired_memory_suppression"
+      ],
+      "time_span_days": 60
+    },
+    {
+      "test_id": "kh_anti_002",
+      "name": "知识缺口检测中的关键知识召回",
+      "test_type": "anti_interference",
+      "description": "知识缺口检测中的关键知识召回；包含11条噪声事件；测试类型: anti_interference；难度: hard",
+      "setup": {
+        "messages": [
+          {
+            "role": "system",
+            "content": "安全合规要求：所有用户数据必须加密存储，密钥使用AWS KMS管理，密钥轮换周期90天。",
+            "timestamp": "2025-12-01T10:00:00",
+            "event_id": "e1",
+            "context": {
+              "project": "LarkMemory"
+            }
+          },
+          {
+            "role": "成员A",
+            "content": "安全培训什么时候搞？",
+            "timestamp": "2025-12-20T09:00:00",
+            "event_id": "noise_1"
+          },
+          {
+            "role": "成员B",
+            "content": "密码策略要不要更新？",
+            "timestamp": "2026-01-10T10:00:00",
+            "event_id": "noise_2"
+          },
+          {
+            "role": "成员C",
+            "content": "安全扫描报告已出，有几个低风险问题。",
+            "timestamp": "2026-01-25T14:00:00",
+            "event_id": "noise_3"
+          },
+          {
+            "role": "成员A",
+            "content": "VPN配置更新了，大家重新连一下。",
+            "timestamp": "2026-02-05T10:00:00",
+            "event_id": "noise_4"
+          },
+          {
+            "role": "产品经理",
+            "content": "安全合规审计安排在下月。",
+            "timestamp": "2026-02-18T11:00:00",
+            "event_id": "noise_5"
+          },
+          {
+            "role": "成员B",
+            "content": "SSL证书到期提醒已设置。",
+            "timestamp": "2026-03-01T09:00:00",
+            "event_id": "noise_6"
+          },
+          {
+            "role": "成员C",
+            "content": "数据脱敏方案我写好了。",
+            "timestamp": "2026-03-10T10:00:00",
+            "event_id": "noise_7"
+          },
+          {
+            "role": "成员A",
+            "content": "这次漏洞需要紧急修复。",
+            "timestamp": "2026-03-20T14:00:00",
+            "event_id": "noise_8"
+          },
+          {
+            "role": "产品经理",
+            "content": "等保合规材料需要更新。",
+            "timestamp": "2026-03-28T10:00:00",
+            "event_id": "noise_9"
+          },
+          {
+            "role": "成员B",
+            "content": "新的安全策略文档发群里了。",
+            "timestamp": "2026-04-01T09:00:00",
+            "event_id": "noise_10"
+          },
+          {
+            "role": "成员C",
+            "content": "渗透测试结果出来了。",
+            "timestamp": "2026-04-10T11:00:00",
+            "event_id": "noise_11"
+          }
+        ],
+        "context": {
+          "project": "LarkMemory"
+        }
+      },
+      "query": {
+        "type": "search",
+        "content": "用户数据加密的密钥管理方式是什么？"
+      },
+      "expected": {
+        "should_retrieve": true,
+        "memory_type": "knowledge",
+        "answer_keywords": [
+          "AWS KMS",
+          "密钥轮换周期90天"
+        ],
+        "evidence_event_ids": [
+          "e1"
+        ]
+      },
+      "difficulty": "hard",
+      "priority": "P2",
+      "tags": [
+        "anti-interference",
+        "noise",
+        "knowledge-health",
+        "hard"
+      ],
+      "metrics": [
+        "recall_at_3",
+        "keyword_match",
+        "noise_robustness"
+      ],
+      "time_span_days": 120
+    },
+    {
+      "test_id": "kh_contra_002",
+      "name": "多人发布的知识冲突合并",
+      "test_type": "contradiction_update",
+      "description": "多人发布的知识冲突合并；包含9条噪声事件；测试类型: contradiction_update；难度: hard",
+      "setup": {
+        "messages": [
+          {
+            "role": "system",
+            "content": "服务端口配置：Memory Engine使用8000端口，API Gateway使用8080端口。",
+            "timestamp": "2025-12-01T10:00:00",
+            "event_id": "e1",
+            "context": {
+              "project": "LarkMemory"
+            }
+          },
+          {
+            "role": "成员A",
+            "content": "端口冲突排查中。",
+            "timestamp": "2026-01-20T10:00:00",
+            "event_id": "noise_1"
+          },
+          {
+            "role": "成员B",
+            "content": "网络策略更新完成。",
+            "timestamp": "2026-02-15T10:00:00",
+            "event_id": "noise_2"
+          },
+          {
+            "role": "成员C",
+            "content": "8000端口被占用的原因找到了。",
+            "timestamp": "2026-02-28T11:00:00",
+            "event_id": "noise_3"
+          },
+          {
+            "role": "成员A",
+            "content": "防火墙规则需要更新吗？",
+            "timestamp": "2026-03-05T09:00:00",
+            "event_id": "noise_4"
+          },
+          {
+            "role": "产品经理",
+            "content": "部署文档我更新了。",
+            "timestamp": "2026-03-10T10:00:00",
+            "event_id": "noise_5"
+          },
+          {
+            "role": "成员B",
+            "content": "端口变更的影响范围评估中。",
+            "timestamp": "2026-03-15T14:00:00",
+            "event_id": "noise_6"
+          },
+          {
+            "role": "system",
+            "content": "Memory Engine端口改用8001，8000端口被其他服务占用。",
+            "timestamp": "2026-03-15T10:00:00",
+            "event_id": "e2",
+            "context": {
+              "project": "LarkMemory"
+            }
+          },
+          {
+            "role": "成员C",
+            "content": "负载均衡配置更新了。",
+            "timestamp": "2026-03-20T10:00:00",
+            "event_id": "noise_7"
+          },
+          {
+            "role": "成员A",
+            "content": "服务发现注册信息需要改。",
+            "timestamp": "2026-03-25T11:00:00",
+            "event_id": "noise_8"
+          },
+          {
+            "role": "产品经理",
+            "content": "客户端配置文件也要同步更新。",
+            "timestamp": "2026-03-30T09:00:00",
+            "event_id": "noise_9"
+          },
+          {
+            "role": "system",
+            "content": "确认：Memory Engine使用8001端口，配置已更新，相关文档已同步。",
+            "timestamp": "2026-04-01T10:00:00",
+            "event_id": "e3",
+            "context": {
+              "project": "LarkMemory"
+            }
+          }
+        ],
+        "context": {
+          "project": "LarkMemory"
+        }
+      },
+      "query": {
+        "type": "search",
+        "content": "Memory Engine当前使用什么端口？"
+      },
+      "expected": {
+        "should_retrieve": true,
+        "memory_type": "knowledge",
+        "current_value": "8001",
+        "inactive_values": [
+          "8000"
+        ],
+        "forbidden_active_values": [
+          "8000端口"
+        ],
+        "allow_historical_mention": true,
+        "answer_keywords": [
+          "8001"
+        ],
+        "evidence_event_ids": [
+          "e2",
+          "e3"
+        ],
+        "superseded_event_ids": [
+          "e1"
+        ],
+        "latest_value": "8001"
+      },
+      "difficulty": "hard",
+      "priority": "P2",
+      "tags": [
+        "contradiction",
+        "update",
+        "knowledge-health",
+        "hard"
+      ],
+      "metrics": [
+        "latest_value_accuracy",
+        "old_value_suppression",
+        "evidence_match"
+      ],
+      "time_span_days": 120
+    },
+    {
+      "test_id": "kh_long_002",
+      "name": "跨年度团队架构约定召回",
+      "test_type": "long_term_retention",
+      "description": "跨年度团队架构约定召回；包含8条噪声事件；测试类型: long_term_retention；难度: hard",
+      "setup": {
+        "messages": [
+          {
+            "role": "system",
+            "content": "技术栈规范（长期有效）：后端Python/FastAPI，前端TypeScript/React，数据库PostgreSQL，缓存Redis，消息队列RabbitMQ。",
+            "timestamp": "2025-04-30T10:00:00",
+            "event_id": "e1",
+            "context": {
+              "project": "LarkMemory"
+            }
+          },
+          {
+            "role": "HR",
+            "content": "Q3招聘计划已发布。",
+            "timestamp": "2025-07-15T10:00:00",
+            "event_id": "noise_1"
+          },
+          {
+            "role": "产品经理",
+            "content": "Q4产品路线图已确认。",
+            "timestamp": "2025-10-01T11:00:00",
+            "event_id": "noise_2"
+          },
+          {
+            "role": "成员A",
+            "content": "2025年度技术总结已发。",
+            "timestamp": "2025-12-20T09:00:00",
+            "event_id": "noise_3"
+          },
+          {
+            "role": "PM",
+            "content": "2026年产品路线图讨论。",
+            "timestamp": "2026-01-15T10:00:00",
+            "event_id": "noise_4"
+          },
+          {
+            "role": "成员B",
+            "content": "新来的同学熟悉Python吗？",
+            "timestamp": "2026-02-10T09:00:00",
+            "event_id": "noise_5"
+          },
+          {
+            "role": "CTO",
+            "content": "技术栈规范继续沿用去年的，不变。",
+            "timestamp": "2026-03-05T10:00:00",
+            "event_id": "noise_6"
+          },
+          {
+            "role": "产品经理",
+            "content": "有人能帮忙review一下新人培训文档吗？",
+            "timestamp": "2026-03-20T11:00:00",
+            "event_id": "noise_7"
+          },
+          {
+            "role": "HR",
+            "content": "Q1技术考核结果已出。",
+            "timestamp": "2026-04-10T10:00:00",
+            "event_id": "noise_8"
+          }
+        ],
+        "context": {
+          "project": "LarkMemory"
+        }
+      },
+      "query": {
+        "type": "search",
+        "content": "我们团队规定的消息队列用什么？"
+      },
+      "expected": {
+        "should_retrieve": true,
+        "memory_type": "knowledge",
+        "answer_keywords": [
+          "RabbitMQ"
+        ],
+        "evidence_event_ids": [
+          "e1"
+        ]
+      },
+      "difficulty": "hard",
+      "priority": "P2",
+      "tags": [
+        "long-term",
+        "retention",
+        "knowledge-health",
+        "hard"
+      ],
+      "metrics": [
+        "recall_at_3",
+        "long_term_recall",
+        "keyword_match",
+        "evidence_match"
+      ],
+      "time_span_days": 365
+    },
+    {
+      "test_id": "kh_abs_001",
+      "name": "团队知识缺口检测：无记录时拒答",
+      "test_type": "abstention",
+      "description": "团队知识缺口检测：无记录时拒答；包含3条噪声事件；测试类型: abstention；难度: medium",
+      "setup": {
+        "messages": [
+          {
+            "role": "system",
+            "content": "生产环境部署使用Kubernetes集群，当前3个节点。",
+            "timestamp": "2026-03-10T10:00:00",
+            "event_id": "e1",
+            "context": {
+              "project": "LarkMemory"
+            }
+          },
+          {
+            "role": "system",
+            "content": "数据库连接使用SSL加密，证书有效期一年。",
+            "timestamp": "2026-03-25T11:00:00",
+            "event_id": "e2",
+            "context": {
+              "project": "LarkMemory"
+            }
+          },
+          {
+            "role": "成员A",
+            "content": "灾备方案讨论过吗？",
+            "timestamp": "2026-04-01T10:00:00",
+            "event_id": "noise_1"
+          },
+          {
+            "role": "成员B",
+            "content": "好像没有人整理过容灾文档。",
+            "timestamp": "2026-04-05T14:00:00",
+            "event_id": "noise_2"
+          },
+          {
+            "role": "成员C",
+            "content": "RTO和RPO的标准是什么？",
+            "timestamp": "2026-04-10T09:00:00",
+            "event_id": "noise_3"
+          }
+        ],
+        "context": {
+          "project": "LarkMemory"
+        }
+      },
+      "query": {
+        "type": "search",
+        "content": "生产环境的RTO和RPO标准是多少？"
+      },
+      "expected": {
+        "should_retrieve": false,
+        "abstention_keywords": [
+          "未找到",
+          "不确定",
+          "没有相关",
+          "无法确定",
+          "未记录",
+          "没有定义"
+        ],
+        "hallucination_triggers": [
+          "RTO 15分钟",
+          "RPO 1小时",
+          "99.99%可用性",
+          "5个9",
+          "4小时RTO"
+        ],
+        "evidence_event_ids": []
+      },
+      "difficulty": "medium",
+      "priority": "P1",
+      "tags": [
+        "abstention",
+        "safety",
+        "knowledge-health",
+        "medium"
+      ],
+      "metrics": [
+        "abstention_accuracy",
+        "hallucination_rate"
+      ],
+      "time_span_days": 45
+    }
+  ]
+}

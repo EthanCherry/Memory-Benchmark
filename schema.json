@@ -1,220 +1,244 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "LarkMemory Benchmark Case Schema v3",
-  "description": "Standard schema for LarkMemory enterprise memory benchmark test cases. Organized by 4 scenario directions (A/B/C/D), each containing applicable test types (anti_interference, contradiction_update, efficiency, abstention, cross_project).",
-  "version": "3.0.0",
+  "title": "LarkMemory Benchmark Dataset Schema v4",
+  "description": "Schema for MemScope-style dataset files (metadata header + test_cases array). For legacy JSONL files, use schema.v3.json.",
+  "version": "4.0.0",
   "type": "object",
-  "required": ["case_id", "category", "test_type", "scenario", "difficulty", "input_events", "query", "expected", "metrics"],
+  "required": ["dataset_name", "version", "total_cases", "test_cases"],
   "properties": {
-    "case_id": {
+    "dataset_name": {
       "type": "string",
-      "description": "Unique identifier, format: {direction_abbr}_{test_type_abbr}_{NNN}",
-      "pattern": "^[a-z]+_[a-z]+_[0-9]{3}$",
-      "examples": ["cmd_eff_001", "dec_anti_002", "pref_abs_003", "kh_xproj_004"]
+      "description": "Name of the dataset, e.g. command_memory, decision_memory",
+      "enum": ["command_memory", "decision_memory", "preference_memory", "knowledge_health"]
     },
-    "category": {
+    "version": {
       "type": "string",
-      "description": "Scenario direction this case belongs to (maps to competition tracks A/B/C/D)",
-      "enum": [
-        "command_memory",
-        "decision_memory",
-        "preference_memory",
-        "knowledge_health"
-      ]
+      "description": "Dataset format version"
     },
-    "test_type": {
+    "description": {
       "type": "string",
-      "description": "Test type — which competition-required or extended capability is being evaluated. Not all test types apply to every direction.",
-      "enum": [
-        "anti_interference",
-        "contradiction_update",
-        "cross_project",
-        "efficiency",
-        "retrieval_recall",
-        "abstention",
-        "long_term_retention"
-      ]
+      "description": "Dataset description"
     },
-    "scenario": {
-      "type": "string",
-      "description": "One-sentence description of the business scenario"
-    },
-    "difficulty": {
-      "type": "string",
-      "description": "Difficulty level. easy=≤7d (same-week active memory), medium=8-90d (cross-sprint/cross-month), hard=>90d (cross-quarter/cross-year). Based on enterprise time anchors and academic memory retention research.",
-      "enum": ["easy", "medium", "hard"]
-    },
-    "time_span_days": {
+    "total_cases": {
       "type": "integer",
-      "description": "Number of days between earliest and latest event in input_events. Used to quantify long-term retention difficulty.",
+      "description": "Total number of test cases in this file",
       "minimum": 0
     },
-    "input_events": {
+    "difficulty_distribution": {
+      "type": "object",
+      "description": "Count of cases by difficulty level",
+      "additionalProperties": { "type": "integer" }
+    },
+    "test_cases": {
       "type": "array",
-      "description": "Sequence of events to be ingested into the memory system before querying. Events should form a coherent timeline, not isolated facts.",
+      "description": "Array of test cases",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["event_id", "timestamp", "source", "content"],
+        "description": "Test case in MemScope-style format with conversational setup",
+        "required": ["test_id", "name", "setup", "query", "expected", "difficulty"],
         "properties": {
-          "event_id": {
+          "test_id": {
             "type": "string",
-            "description": "Unique event identifier within this case (e.g., e1, noise_1)"
+            "description": "Unique identifier, format: {direction_abbr}_{test_type_abbr}_{NNN}",
+            "pattern": "^[a-z]+_[a-z]+_[0-9]{3}$",
+            "examples": ["cmd_eff_001", "dec_anti_002", "pref_abs_003", "kh_xproj_004"]
           },
-          "timestamp": {
+          "name": {
             "type": "string",
-            "format": "date-time",
-            "description": "ISO 8601 datetime of the event"
+            "description": "Short human-readable name for this test case"
           },
-          "source": {
+          "description": {
             "type": "string",
-            "description": "Origin of the event",
-            "enum": ["cli", "feishu_group", "feishu_doc", "feishu_task", "feishu_meeting", "feishu_chat"]
+            "description": "Detailed description including scenario, noise count, and test type"
           },
-          "speaker": {
-            "type": "string",
-            "description": "Name or role of the person who produced this event"
-          },
-          "content": {
-            "type": "string",
-            "description": "Actual text content of the event"
-          },
-          "context": {
+          "setup": {
             "type": "object",
-            "description": "Additional contextual metadata",
+            "description": "Setup data including conversational messages",
+            "required": ["messages"],
             "properties": {
-              "project": { "type": "string" },
-              "cwd": { "type": "string" },
-              "user_id": { "type": "string" },
-              "chat_id": { "type": "string" }
+              "messages": {
+                "type": "array",
+                "description": "Conversational messages representing the events to be ingested",
+                "minItems": 1,
+                "items": {
+                  "description": "A single message in a conversational setup, similar to MemScope format",
+                  "type": "object",
+                  "required": ["role", "content"],
+                  "properties": {
+                    "role": {
+                      "type": "string",
+                      "description": "Role of the message sender: user, assistant, or a custom name (e.g. 技术负责人)",
+                      "examples": ["user", "assistant", "技术负责人", "产品经理"]
+                    },
+                    "content": {
+                      "type": "string",
+                      "description": "Message content"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "ISO 8601 datetime"
+                    },
+                    "context": {
+                      "type": "object",
+                      "description": "Additional context (project, user_id, etc.)",
+                      "properties": {
+                        "project": { "type": "string" },
+                        "cwd": { "type": "string" },
+                        "user_id": { "type": "string" },
+                        "chat_id": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              },
+              "context": {
+                "type": "object",
+                "description": "Additional context for this test case"
+              }
             }
+          },
+          "query": {
+            "description": "The retrieval query or task trigger sent to the memory system after ingestion",
+            "oneOf": [
+              { "type": "string" },
+              {
+                "type": "object",
+                "required": ["type", "content"],
+                "properties": {
+                  "type": { "type": "string" },
+                  "content": { "type": "string" },
+                  "keyword": { "type": "string" }
+                }
+              }
+            ]
+          },
+          "expected": {
+            "type": "object",
+            "description": "Ground truth for scoring this case. Uses two-layer scoring: answer_correct + evidence_correct.",
+            "required": ["should_retrieve"],
+            "properties": {
+              "should_retrieve": {
+                "type": "boolean",
+                "description": "Whether the system should return a non-empty, relevant result"
+              },
+              "memory_type": {
+                "type": "string",
+                "enum": ["decision", "preference", "command", "knowledge", "event"]
+              },
+              "answer_keywords": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "should_not_contain": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "current_value": { "type": "string" },
+              "inactive_values": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "forbidden_active_values": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "allow_historical_mention": {
+                "type": "boolean",
+                "default": false
+              },
+              "evidence_event_ids": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "superseded_event_ids": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "suggested_command": { "type": "string" },
+              "baseline_chars": { "type": "integer", "minimum": 0 },
+              "actual_chars": { "type": "integer", "minimum": 0 },
+              "min_saving_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+              "baseline_steps": { "type": "integer", "minimum": 0 },
+              "actual_steps": { "type": "integer", "minimum": 0 },
+              "min_step_saving_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+              "decision": { "type": "string" },
+              "reason": { "type": "string" },
+              "rejected_option": { "type": "string" },
+              "preference_key": { "type": "string" },
+              "preference_value": { "type": "string" },
+              "condition": { "type": "string" },
+              "abstention_keywords": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "hallucination_triggers": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": ["easy", "medium", "hard"]
+          },
+          "priority": {
+            "type": "string",
+            "description": "Priority level, e.g. P0, P1, P2",
+            "pattern": "^P[0-9]+$"
+          },
+          "tags": {
+            "type": "array",
+            "description": "Tags for categorizing and filtering test cases",
+            "items": { "type": "string" }
+          },
+          "metrics": {
+            "type": "array",
+            "description": "List of metric IDs to evaluate for this case",
+            "items": {
+              "type": "string",
+              "enum": [
+                "recall_at_1",
+                "recall_at_3",
+                "keyword_match",
+                "evidence_match",
+                "evidence_source_accuracy",
+                "should_not_contain_match",
+                "latest_value_accuracy",
+                "old_value_suppression",
+                "inactive_value_mention",
+                "noise_robustness",
+                "top1_hit",
+                "command_exact_match",
+                "char_saving_rate",
+                "step_saving_rate",
+                "decision_match",
+                "reason_match",
+                "rejected_option_match",
+                "preference_match",
+                "condition_match",
+                "conflict_resolution_accuracy",
+                "freshness_accuracy",
+                "expired_memory_suppression",
+                "long_term_recall",
+                "abstention_accuracy",
+                "hallucination_rate",
+                "cross_project_leakage_rate",
+                "scope_accuracy"
+              ]
+            }
+          },
+          "time_span_days": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "input_events": {
+            "deprecated": true,
+            "description": "Kept for backward compatibility. Use setup.messages instead."
           }
         }
       }
-    },
-    "query": {
-      "type": "string",
-      "description": "The retrieval query or task trigger sent to the memory system after ingestion"
-    },
-    "expected": {
-      "type": "object",
-      "description": "Ground truth for scoring this case. Uses two-layer scoring: answer_correct + evidence_correct.",
-      "required": ["should_retrieve"],
-      "properties": {
-        "should_retrieve": {
-          "type": "boolean",
-          "description": "Whether the system should return a non-empty, relevant result. Set to false for abstention tests."
-        },
-        "memory_type": {
-          "type": "string",
-          "description": "Expected memory type tag",
-          "enum": ["decision", "preference", "command", "knowledge", "event"]
-        },
-        "answer_keywords": {
-          "type": "array",
-          "description": "Keywords that MUST appear in the system's response",
-          "items": { "type": "string" }
-        },
-        "should_not_contain": {
-          "type": "array",
-          "description": "Strings that must NOT appear as the CURRENT active answer. For backward compat with simple cases.",
-          "items": { "type": "string" }
-        },
-        "current_value": {
-          "type": "string",
-          "description": "For contradiction_update: the correct up-to-date value"
-        },
-        "inactive_values": {
-          "type": "array",
-          "description": "Historical values that are no longer active. Mentioning them as historical context is OK, but using them as the current answer is WRONG.",
-          "items": { "type": "string" }
-        },
-        "forbidden_active_values": {
-          "type": "array",
-          "description": "Values that must NOT be presented as the current/active answer. Stricter than should_not_contain — even partial matches count.",
-          "items": { "type": "string" }
-        },
-        "allow_historical_mention": {
-          "type": "boolean",
-          "description": "If true, mentioning inactive_values in a historical context (e.g., 'previously X, now Y') is considered correct. If false, any mention is penalized.",
-          "default": false
-        },
-        "evidence_event_ids": {
-          "type": "array",
-          "description": "REQUIRED. event_id(s) in input_events that serve as ground-truth evidence. Used for two-layer scoring: answer_correct + evidence_correct.",
-          "items": { "type": "string" }
-        },
-        "superseded_event_ids": {
-          "type": "array",
-          "description": "event_id(s) that have been superseded and should NOT be cited as active evidence",
-          "items": { "type": "string" }
-        },
-        "suggested_command": {
-          "type": "string",
-          "description": "For command_memory / efficiency: the exact command the system should recommend"
-        },
-        "baseline_chars": {
-          "type": "integer",
-          "description": "For efficiency: character count without memory assistance"
-        },
-        "actual_chars": {
-          "type": "integer",
-          "description": "For efficiency: character count with memory assistance (user input only)"
-        },
-        "min_saving_rate": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1,
-          "description": "For efficiency: minimum required character/step saving rate"
-        },
-        "abstention_keywords": {
-          "type": "array",
-          "description": "For abstention tests: keywords that indicate the system correctly declined to answer (e.g., '未找到', '不确定', '没有相关记忆')",
-          "items": { "type": "string" }
-        },
-        "hallucination_triggers": {
-          "type": "array",
-          "description": "For abstention tests: common plausible-but-fabricated answers the system should NOT produce",
-          "items": { "type": "string" }
-        }
-      }
-    },
-    "metrics": {
-      "type": "array",
-      "description": "List of metric IDs to evaluate for this case",
-      "items": {
-        "type": "string",
-        "enum": [
-          "recall_at_1",
-          "recall_at_3",
-          "keyword_match",
-          "evidence_match",
-          "evidence_source_accuracy",
-          "should_not_contain_match",
-          "latest_value_accuracy",
-          "old_value_suppression",
-          "inactive_value_mention",
-          "noise_robustness",
-          "top1_hit",
-          "command_exact_match",
-          "char_saving_rate",
-          "step_saving_rate",
-          "decision_match",
-          "reason_match",
-          "rejected_option_match",
-          "preference_match",
-          "condition_match",
-          "conflict_resolution_accuracy",
-          "freshness_accuracy",
-          "expired_memory_suppression",
-          "long_term_recall",
-          "abstention_accuracy",
-          "hallucination_rate",
-          "cross_project_leakage_rate",
-          "scope_accuracy"
-        ]
-      }
     }
-  },
-  "additionalProperties": false
+  }
 }

@@ -1,0 +1,973 @@
+{
+  "dataset_name": "command_memory",
+  "version": "3.0",
+  "description": "命令记忆能力评测：测试系统对用户历史命令的记录、频率统计、上下文关联、智能推荐、多跳推理、实体追踪和时序推理能力",
+  "total_cases": 11,
+  "difficulty_distribution": {
+    "easy": 3,
+    "medium": 5,
+    "hard": 3
+  },
+  "test_cases": [
+    {
+      "test_id": "cmd_ret_001",
+      "name": "项目路径关联的测试命令推荐",
+      "test_type": "retrieval_recall",
+      "description": "项目路径关联的测试命令推荐；测试类型: retrieval_recall；难度: easy",
+      "setup": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "pytest tests/test_copilot_permissions.py -q",
+            "timestamp": "2026-04-01T09:00:00",
+            "event_id": "e1",
+            "context": {
+              "cwd": "/workspace/lark-memory",
+              "project": "LarkMemory"
+            }
+          },
+          {
+            "role": "user",
+            "content": "pytest tests/test_copilot_permissions.py -q",
+            "timestamp": "2026-04-03T09:00:00",
+            "event_id": "e2",
+            "context": {
+              "cwd": "/workspace/lark-memory",
+              "project": "LarkMemory"
+            }
+          }
+        ],
+        "context": {
+          "cwd": "/workspace/lark-memory",
+          "project": "LarkMemory"
+        }
+      },
+      "query": {
+        "type": "search",
+        "content": "当前目录 /workspace/lark-memory，用户输入前缀 pytest perm"
+      },
+      "expected": {
+        "should_retrieve": true,
+        "memory_type": "command",
+        "suggested_command": "pytest tests/test_copilot_permissions.py -q",
+        "answer_keywords": [
+          "pytest",
+          "test_copilot_permissions.py",
+          "-q"
+        ],
+        "evidence_event_ids": [
+          "e1",
+          "e2"
+        ]
+      },
+      "difficulty": "easy",
+      "priority": "P0",
+      "tags": [
+        "recall",
+        "command-memory",
+        "easy"
+      ],
+      "metrics": [
+        "top1_hit",
+        "command_exact_match",
+        "recall_at_3"
+      ],
+      "time_span_days": 3
+    },
+    {
+      "test_id": "cmd_ret_002",
+      "name": "多项目隔离的命令记忆",
+      "test_type": "retrieval_recall",
+      "description": "多项目隔离的命令记忆；测试类型: retrieval_recall；难度: easy",
+      "setup": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "npm run build -- --env production",
+            "timestamp": "2026-04-01T14:00:00",
+            "event_id": "e1",
+            "context": {
+              "cwd": "/workspace/frontend",
+              "project": "FrontendApp"
+            }
+          },
+          {
+            "role": "user",
+            "content": "npm run dev",
+            "timestamp": "2026-04-05T10:00:00",
+            "event_id": "e2",
+            "context": {
+              "cwd": "/workspace/frontend",
+              "project": "FrontendApp"
+            }
+          }
+        ],
+        "context": {
+          "cwd": "/workspace/frontend",
+          "project": "FrontendApp"
+        }
+      },
+      "query": {
+        "type": "search",
+        "content": "项目 /workspace/frontend，用户输入 npm b"
+      },
+      "expected": {
+        "should_retrieve": true,
+        "memory_type": "command",
+        "suggested_command": "npm run build -- --env production",
+        "answer_keywords": [
+          "npm",
+          "build",
+          "production"
+        ],
+        "evidence_event_ids": [
+          "e1"
+        ]
+      },
+      "difficulty": "easy",
+      "priority": "P0",
+      "tags": [
+        "recall",
+        "command-memory",
+        "easy"
+      ],
+      "metrics": [
+        "top1_hit",
+        "command_exact_match"
+      ],
+      "time_span_days": 5
+    },
+    {
+      "test_id": "cmd_eff_001",
+      "name": "CLI 高频命令补全提效",
+      "test_type": "efficiency",
+      "description": "CLI 高频命令补全提效；测试类型: efficiency；难度: easy",
+      "setup": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "cd /workspace/lark-memory && python scripts/check_demo_readiness.py",
+            "timestamp": "2026-04-01T10:00:00",
+            "event_id": "e1",
+            "context": {
+              "cwd": "/workspace/lark-memory"
+            }
+          },
+          {
+            "role": "user",
+            "content": "cd /workspace/lark-memory && python scripts/check_demo_readiness.py",
+            "timestamp": "2026-04-03T10:00:00",
+            "event_id": "e2",
+            "context": {
+              "cwd": "/workspace/lark-memory"
+            }
+          }
+        ],
+        "context": {
+          "cwd": "/workspace/lark-memory"
+        }
+      },
+      "query": {
+        "type": "recommendation",
+        "content": "check demo"
+      },
+      "expected": {
+        "should_retrieve": true,
+        "suggested_command": "python scripts/check_demo_readiness.py",
+        "baseline_chars": 68,
+        "actual_chars": 10,
+        "min_saving_rate": 0.7,
+        "answer_keywords": [
+          "check_demo_readiness.py"
+        ],
+        "evidence_event_ids": [
+          "e1",
+          "e2"
+        ]
+      },
+      "difficulty": "easy",
+      "priority": "P0",
+      "tags": [
+        "efficiency",
+        "command-memory",
+        "easy"
+      ],
+      "metrics": [
+        "top1_hit",
+        "char_saving_rate"
+      ],
+      "time_span_days": 7
+    },
+    {
+      "test_id": "cmd_eff_002",
+      "name": "参数偏好记忆减少重复输入",
+      "test_type": "efficiency",
+      "description": "参数偏好记忆减少重复输入；测试类型: efficiency；难度: medium",
+      "setup": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "pytest tests/ -q --tb=short --cov=memory_engine",
+            "timestamp": "2026-04-01T09:00:00",
+            "event_id": "e1",
+            "context": {
+              "cwd": "/workspace/lark-memory",
+              "project": "LarkMemory"
+            }
+          },
+          {
+            "role": "user",
+            "content": "pytest tests/ -q --tb=short --cov=memory_engine",
+            "timestamp": "2026-04-10T09:00:00",
+            "event_id": "e2",
+            "context": {
+              "cwd": "/workspace/lark-memory",
+              "project": "LarkMemory"
+            }
+          },
+          {
+            "role": "user",
+            "content": "pytest tests/ -q --tb=short --cov=memory_engine",
+            "timestamp": "2026-04-21T09:00:00",
+            "event_id": "e3",
+            "context": {
+              "cwd": "/workspace/lark-memory",
+              "project": "LarkMemory"
+            }
+          }
+        ],
+        "context": {
+          "cwd": "/workspace/lark-memory",
+          "project": "LarkMemory"
+        }
+      },
+      "query": {
+        "type": "recommendation",
+        "content": "用户在 /workspace/lark-memory 下输入 pytest test"
+      },
+      "expected": {
+        "should_retrieve": true,
+        "suggested_command": "pytest tests/ -q --tb=short --cov=memory_engine",
+        "baseline_chars": 56,
+        "actual_chars": 15,
+        "min_saving_rate": 0.6,
+        "answer_keywords": [
+          "pytest",
+          "-q",
+          "--tb=short",
+          "--cov"
+        ],
+        "evidence_event_ids": [
+          "e1",
+          "e2",
+          "e3"
+        ]
+      },
+      "difficulty": "medium",
+      "priority": "P1",
+      "tags": [
+        "efficiency",
+        "command-memory",
+        "medium"
+      ],
+      "metrics": [
+        "top1_hit",
+        "char_saving_rate"
+      ],
+      "time_span_days": 21
+    },
+    {
+      "test_id": "cmd_anti_001",
+      "name": "高频噪声命令后的正确命令召回",
+      "test_type": "anti_interference",
+      "description": "高频噪声命令后的正确命令召回；包含9条噪声事件；测试类型: anti_interference；难度: medium",
+      "setup": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "python scripts/deploy.py --env staging --region us-east-1",
+            "timestamp": "2026-04-01T09:00:00",
+            "event_id": "e1",
+            "context": {
+              "cwd": "/workspace/lark-memory",
+              "project": "LarkMemory"
+            }
+          },
+          {
+            "role": "user",
+            "content": "ls -la",
+            "timestamp": "2026-04-02T10:00:00",
+            "event_id": "noise_1",
+            "context": {
+              "cwd": "/workspace/lark-memory"
+            }
+          },
+          {
+            "role": "user",
+            "content": "git status",
+            "timestamp": "2026-04-04T10:00:00",
+            "event_id": "noise_2",
+            "context": {
+              "cwd": "/workspace/lark-memory"
+            }
+          },
+          {
+            "role": "user",
+            "content": "cat README.md",
+            "timestamp": "2026-04-06T09:00:00",
+            "event_id": "noise_3",
+            "context": {
+              "cwd": "/workspace/lark-memory"
+            }
+          },
+          {
+            "role": "user",
+            "content": "echo $PATH",
+            "timestamp": "2026-04-08T09:00:00",
+            "event_id": "noise_4",
+            "context": {
+              "cwd": "/workspace/lark-memory"
+            }
+          },
+          {
+            "role": "user",
+            "content": "docker ps",
+            "timestamp": "2026-04-10T09:00:00",
+            "event_id": "noise_5",
+            "context": {
+              "cwd": "/workspace/lark-memory"
+            }
+          },
+          {
+            "role": "user",
+            "content": "pip install black",
+            "timestamp": "2026-04-11T10:00:00",
+            "event_id": "noise_6",
+            "context": {
+              "cwd": "/workspace/lark-memory"
+            }
+          },
+          {
+            "role": "user",
+            "content": "git log --oneline -5",
+            "timestamp": "2026-04-12T14:00:00",
+            "event_id": "noise_7",
+            "context": {
+              "cwd": "/workspace/lark-memory"
+            }
+          },
+          {
+            "role": "user",
+            "content": "free -h",
+            "timestamp": "2026-04-13T09:00:00",
+            "event_id": "noise_8",
+            "context": {
+              "cwd": "/workspace/lark-memory"
+            }
+          },
+          {
+            "role": "user",
+            "content": "df -h",
+            "timestamp": "2026-04-14T10:00:00",
+            "event_id": "noise_9",
+            "context": {
+              "cwd": "/workspace/lark-memory"
+            }
+          }
+        ],
+        "context": {
+          "cwd": "/workspace/lark-memory",
+          "project": "LarkMemory"
+        }
+      },
+      "query": {
+        "type": "search",
+        "content": "项目部署命令"
+      },
+      "expected": {
+        "should_retrieve": true,
+        "memory_type": "command",
+        "suggested_command": "python scripts/deploy.py --env staging --region us-east-1",
+        "answer_keywords": [
+          "deploy.py",
+          "staging",
+          "us-east-1"
+        ],
+        "evidence_event_ids": [
+          "e1"
+        ]
+      },
+      "difficulty": "medium",
+      "priority": "P1",
+      "tags": [
+        "anti-interference",
+        "noise",
+        "command-memory",
+        "medium"
+      ],
+      "metrics": [
+        "top1_hit",
+        "noise_robustness",
+        "recall_at_3"
+      ],
+      "time_span_days": 14
+    },
+    {
+      "test_id": "cmd_ret_003",
+      "name": "上下文感知的命令推荐",
+      "test_type": "retrieval_recall",
+      "description": "上下文感知的命令推荐；测试类型: retrieval_recall；难度: medium",
+      "setup": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "docker compose up -d postgres redis",
+            "timestamp": "2026-04-01T09:00:00",
+            "event_id": "e1",
+            "context": {
+              "cwd": "/workspace/lark-memory",
+              "project": "LarkMemory"
+            }
+          },
+          {
+            "role": "user",
+            "content": "docker compose logs -f memory-engine",
+            "timestamp": "2026-04-07T09:00:00",
+            "event_id": "e2",
+            "context": {
+              "cwd": "/workspace/lark-memory",
+              "project": "LarkMemory"
+            }
+          },
+          {
+            "role": "user",
+            "content": "docker compose down",
+            "timestamp": "2026-04-14T09:00:00",
+            "event_id": "e3",
+            "context": {
+              "cwd": "/workspace/lark-memory",
+              "project": "LarkMemory"
+            }
+          }
+        ],
+        "context": {
+          "cwd": "/workspace/lark-memory",
+          "project": "LarkMemory"
+        }
+      },
+      "query": {
+        "type": "search",
+        "content": "启动数据库服务"
+      },
+      "expected": {
+        "should_retrieve": true,
+        "memory_type": "command",
+        "suggested_command": "docker compose up -d postgres redis",
+        "answer_keywords": [
+          "docker",
+          "compose",
+          "postgres",
+          "redis"
+        ],
+        "evidence_event_ids": [
+          "e1"
+        ]
+      },
+      "difficulty": "medium",
+      "priority": "P1",
+      "tags": [
+        "recall",
+        "command-memory",
+        "medium"
+      ],
+      "metrics": [
+        "top1_hit",
+        "recall_at_3"
+      ],
+      "time_span_days": 14
+    },
+    {
+      "test_id": "cmd_ret_004",
+      "name": "子命令模式归纳",
+      "test_type": "retrieval_recall",
+      "description": "子命令模式归纳；测试类型: retrieval_recall；难度: medium",
+      "setup": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "git push origin feature/memory-ingest",
+            "timestamp": "2026-04-01T10:00:00",
+            "event_id": "e1",
+            "context": {
+              "cwd": "/workspace/lark-memory"
+            }
+          },
+          {
+            "role": "user",
+            "content": "git push origin feature/benchmark-runner",
+            "timestamp": "2026-04-10T10:00:00",
+            "event_id": "e2",
+            "context": {
+              "cwd": "/workspace/lark-memory"
+            }
+          },
+          {
+            "role": "user",
+            "content": "git push origin main",
+            "timestamp": "2026-04-30T10:00:00",
+            "event_id": "e3",
+            "context": {
+              "cwd": "/workspace/lark-memory"
+            }
+          }
+        ],
+        "context": {
+          "cwd": "/workspace/lark-memory"
+        }
+      },
+      "query": {
+        "type": "search",
+        "content": "推送当前分支"
+      },
+      "expected": {
+        "should_retrieve": true,
+        "memory_type": "command",
+        "answer_keywords": [
+          "git",
+          "push",
+          "origin"
+        ],
+        "evidence_event_ids": [
+          "e1",
+          "e2",
+          "e3"
+        ]
+      },
+      "difficulty": "medium",
+      "priority": "P1",
+      "tags": [
+        "recall",
+        "command-memory",
+        "medium"
+      ],
+      "metrics": [
+        "recall_at_3",
+        "keyword_match"
+      ],
+      "time_span_days": 30
+    },
+    {
+      "test_id": "cmd_eff_003",
+      "name": "季度前部署命令召回节省重复操作",
+      "test_type": "efficiency",
+      "description": "季度前部署命令召回节省重复操作；测试类型: efficiency；难度: hard",
+      "setup": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "ansible-playbook deploy/staging.yml -i inventory/staging --tags memory",
+            "timestamp": "2025-12-15T14:00:00",
+            "event_id": "e1",
+            "context": {
+              "cwd": "/workspace/infra"
+            }
+          },
+          {
+            "role": "user",
+            "content": "ansible-playbook deploy/staging.yml -i inventory/staging --tags memory",
+            "timestamp": "2026-01-20T14:00:00",
+            "event_id": "e2",
+            "context": {
+              "cwd": "/workspace/infra"
+            }
+          },
+          {
+            "role": "user",
+            "content": "ansible-playbook deploy/staging.yml -i inventory/staging --tags memory",
+            "timestamp": "2026-04-14T14:00:00",
+            "event_id": "e3",
+            "context": {
+              "cwd": "/workspace/infra"
+            }
+          }
+        ],
+        "context": {
+          "cwd": "/workspace/infra"
+        }
+      },
+      "query": {
+        "type": "recommendation",
+        "content": "staging 环境部署 memory 模块"
+      },
+      "expected": {
+        "should_retrieve": true,
+        "suggested_command": "ansible-playbook deploy/staging.yml -i inventory/staging --tags memory",
+        "baseline_chars": 72,
+        "actual_chars": 12,
+        "min_saving_rate": 0.8,
+        "answer_keywords": [
+          "ansible-playbook",
+          "staging",
+          "memory"
+        ],
+        "evidence_event_ids": [
+          "e1",
+          "e2",
+          "e3"
+        ]
+      },
+      "difficulty": "hard",
+      "priority": "P2",
+      "tags": [
+        "efficiency",
+        "command-memory",
+        "hard"
+      ],
+      "metrics": [
+        "top1_hit",
+        "char_saving_rate"
+      ],
+      "time_span_days": 120
+    },
+    {
+      "test_id": "cmd_anti_002",
+      "name": "跨项目噪声后的正确路径命令召回",
+      "test_type": "anti_interference",
+      "description": "跨项目噪声后的正确路径命令召回；包含12条噪声事件；测试类型: anti_interference；难度: hard",
+      "setup": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "python manage.py runserver 0.0.0.0:8000",
+            "timestamp": "2025-10-01T09:00:00",
+            "event_id": "e1",
+            "context": {
+              "cwd": "/workspace/lark-memory",
+              "project": "LarkMemory"
+            }
+          },
+          {
+            "role": "user",
+            "content": "cd /workspace/other-project && make build",
+            "timestamp": "2025-11-10T10:00:00",
+            "event_id": "noise_1",
+            "context": {
+              "cwd": "/workspace/other-project"
+            }
+          },
+          {
+            "role": "user",
+            "content": "npm start",
+            "timestamp": "2025-11-25T10:00:00",
+            "event_id": "noise_2",
+            "context": {
+              "cwd": "/workspace/other-project"
+            }
+          },
+          {
+            "role": "user",
+            "content": "make test",
+            "timestamp": "2025-12-10T09:00:00",
+            "event_id": "noise_3",
+            "context": {
+              "cwd": "/workspace/other-project"
+            }
+          },
+          {
+            "role": "user",
+            "content": "cargo test",
+            "timestamp": "2026-01-05T10:00:00",
+            "event_id": "noise_4",
+            "context": {
+              "cwd": "/workspace/rust-lib"
+            }
+          },
+          {
+            "role": "user",
+            "content": "cargo build --release",
+            "timestamp": "2026-01-20T10:00:00",
+            "event_id": "noise_5",
+            "context": {
+              "cwd": "/workspace/rust-lib"
+            }
+          },
+          {
+            "role": "user",
+            "content": "go test ./...",
+            "timestamp": "2026-02-01T09:00:00",
+            "event_id": "noise_6",
+            "context": {
+              "cwd": "/workspace/go-service"
+            }
+          },
+          {
+            "role": "user",
+            "content": "go build -o bin/server",
+            "timestamp": "2026-02-15T10:00:00",
+            "event_id": "noise_7",
+            "context": {
+              "cwd": "/workspace/go-service"
+            }
+          },
+          {
+            "role": "user",
+            "content": "go mod tidy",
+            "timestamp": "2026-02-28T10:00:00",
+            "event_id": "noise_8",
+            "context": {
+              "cwd": "/workspace/go-service"
+            }
+          },
+          {
+            "role": "user",
+            "content": "npm run lint",
+            "timestamp": "2026-03-10T11:00:00",
+            "event_id": "noise_9",
+            "context": {
+              "cwd": "/workspace/other-project"
+            }
+          },
+          {
+            "role": "user",
+            "content": "pip install -r requirements.txt",
+            "timestamp": "2026-03-20T09:00:00",
+            "event_id": "noise_10",
+            "context": {
+              "cwd": "/workspace/lark-memory"
+            }
+          },
+          {
+            "role": "user",
+            "content": "docker build -t other-project .",
+            "timestamp": "2026-03-28T10:00:00",
+            "event_id": "noise_11",
+            "context": {
+              "cwd": "/workspace/other-project"
+            }
+          },
+          {
+            "role": "user",
+            "content": "python -m pytest",
+            "timestamp": "2026-04-01T10:00:00",
+            "event_id": "noise_12",
+            "context": {
+              "cwd": "/workspace/rust-lib"
+            }
+          }
+        ],
+        "context": {
+          "cwd": "/workspace/lark-memory",
+          "project": "LarkMemory"
+        }
+      },
+      "query": {
+        "type": "search",
+        "content": "lark-memory 项目启动服务"
+      },
+      "expected": {
+        "should_retrieve": true,
+        "memory_type": "command",
+        "suggested_command": "python manage.py runserver 0.0.0.0:8000",
+        "answer_keywords": [
+          "manage.py",
+          "runserver",
+          "8000"
+        ],
+        "evidence_event_ids": [
+          "e1"
+        ]
+      },
+      "difficulty": "hard",
+      "priority": "P2",
+      "tags": [
+        "anti-interference",
+        "noise",
+        "command-memory",
+        "hard"
+      ],
+      "metrics": [
+        "top1_hit",
+        "noise_robustness"
+      ],
+      "time_span_days": 180
+    },
+    {
+      "test_id": "cmd_ret_005",
+      "name": "跨年度部署命令参数补全",
+      "test_type": "retrieval_recall",
+      "description": "跨年度部署命令参数补全；测试类型: retrieval_recall；难度: hard",
+      "setup": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "gcloud app deploy --project=lark-memory-dev --version=v2.3.1",
+            "timestamp": "2025-04-20T09:00:00",
+            "event_id": "e1",
+            "context": {
+              "cwd": "/workspace/lark-memory"
+            }
+          },
+          {
+            "role": "user",
+            "content": "gcloud app deploy --project=lark-memory-dev --version=v2.4.0",
+            "timestamp": "2025-08-10T09:00:00",
+            "event_id": "e2",
+            "context": {
+              "cwd": "/workspace/lark-memory"
+            }
+          },
+          {
+            "role": "user",
+            "content": "gcloud app deploy --project=lark-memory-dev --version=v3.0.0",
+            "timestamp": "2026-04-20T09:00:00",
+            "event_id": "e3",
+            "context": {
+              "cwd": "/workspace/lark-memory"
+            }
+          }
+        ],
+        "context": {
+          "cwd": "/workspace/lark-memory"
+        }
+      },
+      "query": {
+        "type": "search",
+        "content": "部署到 dev 环境"
+      },
+      "expected": {
+        "should_retrieve": true,
+        "memory_type": "command",
+        "suggested_command": "gcloud app deploy --project=lark-memory-dev",
+        "answer_keywords": [
+          "gcloud",
+          "deploy",
+          "lark-memory-dev"
+        ],
+        "evidence_event_ids": [
+          "e3"
+        ]
+      },
+      "difficulty": "hard",
+      "priority": "P2",
+      "tags": [
+        "recall",
+        "command-memory",
+        "hard"
+      ],
+      "metrics": [
+        "top1_hit",
+        "recall_at_3",
+        "keyword_match"
+      ],
+      "time_span_days": 365
+    },
+    {
+      "test_id": "cmd_xproj_001",
+      "name": "同类型命令的跨项目隔离",
+      "test_type": "cross_project",
+      "description": "同类型命令的跨项目隔离；包含4条噪声事件；测试类型: cross_project；难度: medium",
+      "setup": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "docker compose up -d postgres redis",
+            "timestamp": "2026-03-10T10:00:00",
+            "event_id": "e1",
+            "context": {
+              "cwd": "/workspace/lark-memory",
+              "project": "LarkMemory"
+            }
+          },
+          {
+            "role": "user",
+            "content": "docker compose up -d mysql elasticsearch",
+            "timestamp": "2026-03-20T10:00:00",
+            "event_id": "e2",
+            "context": {
+              "cwd": "/workspace/data-pipeline",
+              "project": "DataPipeline"
+            }
+          },
+          {
+            "role": "user",
+            "content": "docker compose ps",
+            "timestamp": "2026-03-25T10:00:00",
+            "event_id": "noise_1",
+            "context": {
+              "cwd": "/workspace/lark-memory"
+            }
+          },
+          {
+            "role": "user",
+            "content": "docker images",
+            "timestamp": "2026-03-28T10:00:00",
+            "event_id": "noise_2",
+            "context": {
+              "cwd": "/workspace/data-pipeline"
+            }
+          },
+          {
+            "role": "user",
+            "content": "docker volume ls",
+            "timestamp": "2026-04-01T09:00:00",
+            "event_id": "noise_3",
+            "context": {
+              "cwd": "/workspace/lark-memory"
+            }
+          },
+          {
+            "role": "user",
+            "content": "docker network ls",
+            "timestamp": "2026-04-05T10:00:00",
+            "event_id": "noise_4",
+            "context": {
+              "cwd": "/workspace/data-pipeline"
+            }
+          }
+        ],
+        "context": {
+          "cwd": "/workspace/lark-memory",
+          "project": "LarkMemory"
+        }
+      },
+      "query": {
+        "type": "search",
+        "content": "在 /workspace/data-pipeline 目录下，启动数据库服务应该用什么命令？"
+      },
+      "expected": {
+        "should_retrieve": true,
+        "memory_type": "command",
+        "suggested_command": "docker compose up -d mysql elasticsearch",
+        "answer_keywords": [
+          "docker compose",
+          "mysql",
+          "elasticsearch"
+        ],
+        "forbidden_active_values": [
+          "postgres",
+          "redis"
+        ],
+        "evidence_event_ids": [
+          "e2"
+        ],
+        "superseded_event_ids": [
+          "e1"
+        ]
+      },
+      "difficulty": "medium",
+      "priority": "P1",
+      "tags": [
+        "cross-project",
+        "isolation",
+        "command-memory",
+        "medium"
+      ],
+      "metrics": [
+        "scope_accuracy",
+        "cross_project_leakage_rate",
+        "evidence_match"
+      ],
+      "time_span_days": 30
+    }
+  ]
+}
