@@ -1,8 +1,9 @@
-# LarkMemory Benchmark 生成方案 v1.0
+# LarkMemory Benchmark 生成方案 v1.1
 
 > **项目**: 飞书 OpenClaw 赛道 — 企业级长程协作 Memory 系统  
-> **文档版本**: v1.0  
+> **文档版本**: v1.1  
 > **创建时间**: 2026-04-30  
+> **最后更新**: 2026-05-04  
 > **参考基准**: LONGMEMEVAL (ICLR 2025)、LOCOMO (ACL Findings 2024)、MemBench (ACL Findings 2025)
 
 ---
@@ -74,7 +75,7 @@
 | 对比维度 | LONGMEMEVAL | LOCOMO | MemBench | **本 Benchmark** |
 |----------|-------------|--------|----------|-----------------|
 | 组织方式 | 按能力类型 | 按能力类型 | 按能力类型 | **按业务方向**（每方向含多测试类型） |
-| 样本数 | 500 | 1,813 | ~65k | 51 (v1.0) |
+| 样本数 | 500 | 1,813 | ~65k | 49 (v1.1) |
 | 业务场景 | 通用对话 | 日常对话 | 通用 Agent | **企业办公/研发协作** |
 | 测试类型 | 记忆召回 | 记忆召回 | 准确/召回/容量/效率 | **召回 + 抗干扰 + 矛盾更新 + 效能 + 长时序 + 拒答 + 跨项目** |
 | 核心指标 | QA准确率 | QA准确率 | 准确/召回/容量/效率 | **命中率 + 效能指标 + 更新准确性 + 拒答率 + 项目隔离率** |
@@ -97,22 +98,86 @@
 
 ---
 
-## 4. 数据格式
+## 4. 数据格式（v3 → v4）
 
-### 4.1 Schema 概览
+本仓库同时支持两种格式并存：
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `case_id` | string | `{direction}_{test_type}_{NNN}` |
-| `category` | enum | 4 个方向之一 |
-| `test_type` | enum | 7 种测试类型之一 |
-| `scenario` | string | 业务场景描述 |
-| `difficulty` | enum | easy (≤7d) / medium (8-90d) / hard (>90d) |
-| `time_span_days` | int | 事件时间跨度（天） |
-| `input_events` | array | 事件链序列，按时间排序 |
-| `query` | string | 检索问题 |
-| `expected` | object | 标准答案（双层判分：answer_correct + evidence_correct） |
-| `metrics` | array | 判分指标列表 |
+| | v3（旧版，向后兼容） | v4（新版，推荐） |
+|---|---|---|
+| **文件格式** | `.jsonl`（每行一个 case） | `.json`（元数据头 + `test_cases` 数组） |
+| **Schema** | `schema.v3.json` | `schema.json` |
+| **事件字段** | `input_events`（含 `event_id`、`source`、`speaker`） | `setup.messages`（含 `role`、`content`、`event_id`） |
+| **query 字段** | 纯字符串 | 字符串 或 结构化对象 `{"type": "", "content": ""}` |
+| **适用场景** | 旧版评测兼容 | 飞书环境、MemScope 对齐 |
+
+### 4.1 v4 格式结构说明
+
+v4 格式采用 MemScope 风格的对话式结构，更适合飞书群聊场景：
+
+```json
+{
+  "dataset_name": "decision_memory",
+  "version": "3.0",
+  "description": "决策记忆能力评测",
+  "total_cases": 16,
+  "difficulty_distribution": {"easy": 5, "medium": 6, "hard": 5},
+  "test_cases": [
+    {
+      "test_id": "dec_contra_001",
+      "test_type": "contradiction_update",
+      "name": "决策方案变更",
+      "description": "方案变更场景；包含5条噪声事件；测试类型: contradiction_update；难度: medium",
+      "setup": {
+        "messages": [
+          {
+            "event_id": "e1",
+            "role": "技术负责人",
+            "content": "缓存层我们决定用Redis。",
+            "timestamp": "2026-04-01T10:00:00",
+            "context": {"project": "LarkMemory"}
+          },
+          {
+            "event_id": "e2",
+            "role": "技术负责人",
+            "content": "经过评估，我们最终决定改用Memcached。",
+            "timestamp": "2026-04-15T14:00:00",
+            "context": {"project": "LarkMemory"}
+          }
+        ]
+      },
+      "query": {
+        "type": "search",
+        "content": "我们的缓存层最终用什么方案？"
+      },
+      "expected": {
+        "should_retrieve": true,
+        "current_value": "Memcached",
+        "inactive_values": ["Redis"],
+        "answer_keywords": ["Memcached", "内存占用过高"],
+        "evidence_event_ids": ["e2"],
+        "superseded_event_ids": ["e1"]
+      },
+      "difficulty": "medium",
+      "priority": "P1",
+      "tags": ["contradiction", "update", "decision-memory", "medium"],
+      "metrics": ["latest_value_accuracy", "old_value_suppression", "evidence_match"]
+    }
+  ]
+}
+```
+
+**v3 → v4 字段映射**：
+
+| v3 字段 | v4 字段 | 说明 |
+|---------|---------|------|
+| `case_id` | `test_id` | 唯一标识 |
+| `category` | *（移至元数据头 `dataset_name`）* | v4 每个文件只含一个方向 |
+| `scenario` | `name` | 场景描述 |
+| `input_events[].speaker` | `setup.messages[].role` | 发言者 → 消息角色 |
+| `input_events[].source` | *（不再需要，由 `role` 隐含）* | v4 通过 `role` 区分消息来源 |
+| `input_events[].content` | `setup.messages[].content` | 内容不变 |
+| `input_events[].event_id` | `setup.messages[].event_id` | 保留，供 `evidence_event_ids` 引用 |
+| `query`（字符串） | `query`（字符串或对象） | v4 支持结构化 query |
 
 ### 4.2 test_type 枚举
 
@@ -211,7 +276,7 @@
 > - MemBench (ACL Findings 2025) 在 100k tokens 上下文后记忆性能显著下降
 > - Agent Memory Survey (2026) 明确指出"跨数周到数月的可靠知识保留尚未解决"，一周滚动摘要经 3 次压缩后丢失关键信息
 > - 企业协作有自然时间锚点：日报（1天）、周会（7天）、迭代周期（2~4周）、季度复盘（90天）、年度规划（365天）
->
+
 > **每个 hard 级别的 case 应至少覆盖半年（180天）或一年（365天）的时间跨度**，以真正测试"长时序"能力。
 
 ---
@@ -273,9 +338,10 @@
 3. **真实性**：场景贴近真实企业协作，噪声模拟真实群聊
 4. **难度梯度**：每个 benchmark easy:medium:hard ≈ 3:5:2
 5. **比赛覆盖**：⭐ 抗干扰、⭐ 矛盾更新、⭐ 效能 三类测试必须出现在至少 2 个方向中
-6. **证据必填**：所有 case 的 `evidence_event_ids` 必须填写
+6. **证据必填**：所有 case 的 `evidence_event_ids` 必须填写（v4 中 `setup.messages[].event_id` 需保留）
 7. **禁止冒高**：不得通过删除难例来虚高通过率
 8. **拒答测试**：abstention 类 case 的 `should_retrieve` 必须为 false
+9. **格式兼容**：新增 case 需同时支持 v3（`.jsonl`）和 v4（`.json`）格式验证
 
 ---
 
@@ -292,14 +358,27 @@
     ↓
 噪声填充：按难度等级填充真实群聊噪声（easy 0~5 / medium 5~15 / hard 10~50）
     ↓
-统一 JSONL + validate_schema.py（含语义校验）
+v4 格式写入（MemScope 风格）+ validate_schema.py
+    ↓
+（可选）convert_to_conversation_format.py 从 v3 JSONL 转换
     ↓
 run_benchmark.py 输出报告（双层判分）
 ```
 
 ---
 
-## 9. 参考文献
+## 9. 版本记录
+
+| 版本 | 日期 | 变更内容 |
+|------|------|---------|
+| v0.1 | 2026-04-30 | 方案文档 + schema + 8 类 mini benchmark（40条） |
+| v0.2 | 2026-04-30 | 重构为 4 方向 × 5 测试类型结构（40条），难度分级校准 |
+| v1.0 | 2026-05-01 | 7 测试类型 + 双层判分 + 精细矛盾更新 + 拒答 + 跨项目 + 噪声升级（49条） |
+| v1.1 | 2026-05-04 | 数据集格式升级至 v4（MemScope 风格），schema.json 内联消除 `$ref` 指针问题，新增 `convert_to_conversation_format.py`，`validate_schema.py` 支持 v3/v4 双格式验证 |
+
+---
+
+## 10. 参考文献
 
 1. Wu, D., et al. (2025). LongMemEval: Benchmarking Chat Assistants on Long-Term Interactive Memory. *ICLR 2025*. arXiv:2410.10813.
 2. Maharana, A., et al. (2024). Evaluating Very Long-Term Conversational Memory of LLM Agents. *ACL Findings 2024*. arXiv:2402.17753.

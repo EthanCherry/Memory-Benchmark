@@ -1,7 +1,7 @@
 # LarkMemory Benchmark 评测报告
 
 > **评测日期**: YYYY-MM-DD  
-> **评测版本**: v1.0  
+> **评测版本**: v1.1  
 > **Memory Engine 版本**: vX.X.X  
 > **评测环境**: [本地/服务器配置]
 
